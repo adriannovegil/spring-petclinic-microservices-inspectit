@@ -1,42 +1,13 @@
 version: '2'
+
 services:
-  jaeger:
-    image: jaegertracing/all-in-one:latest
-    container_name: jaeger
-    environment:
-     - COLLECTOR_ZIPKIN_HTTP_PORT=9411
-    ports:
-     - 5775:5775/udp
-     - 6831:6831/udp
-     - 6832:6832/udp
-     - 5778:5778
-     - 16686:16686
-     - 14268:14268
-     - 9411:9411
-
-  config-server:
-    image: openapm/spring-petclinic-config-server:opencensus-showcase
-    container_name: config-server
-    entrypoint: ["java","-Djava.security.egd=file:/dev/./urandom","-jar","/app.jar"]
-    ports:
-     - 8888:8888
-
-  discovery-server:
-    image: openapm/spring-petclinic-discovery-server:opencensus-showcase
-    container_name: discovery-server
-    links:
-     - config-server
-    depends_on:
-      - config-server
-    entrypoint: ["./wait-for-it.sh","config-server:8888","--timeout=60","--","java","-Djava.security.egd=file:/dev/./urandom","-jar","/app.jar"]
-    ports:
-     - 8761:8761
 
   customers-service:
-    image: openapm/spring-petclinic-customers-service:opencensus-showcase
+    image: openapm/spring-petclinic-customers-service
     container_name: customers-service
+    mem_limit: 512M
     links:
-     - jaeger
+     - jaeger-server
      - config-server
      - discovery-server
     depends_on:
@@ -48,10 +19,11 @@ services:
     - 9092:9092
 
   visits-service:
-    image: openapm/spring-petclinic-visits-service:opencensus-showcase
+    image: openapm/spring-petclinic-visits-service
     container_name: visits-service
+    mem_limit: 512M
     links:
-     - jaeger
+     - jaeger-server
      - config-server
      - discovery-server
     depends_on:
@@ -63,10 +35,11 @@ services:
      - 9094:9094
 
   vets-service:
-    image: openapm/spring-petclinic-vets-service:opencensus-showcase
+    image: openapm/spring-petclinic-vets-service
     container_name: vets-service
+    mem_limit: 512M
     links:
-     - jaeger
+     - jaeger-server
      - config-server
      - discovery-server
     depends_on:
@@ -78,10 +51,11 @@ services:
      - 9093:9093
 
   api-gateway:
-    image: openapm/spring-petclinic-api-gateway:opencensus-showcase
+    image: openapm/spring-petclinic-api-gateway
     container_name: api-gateway
+    mem_limit: 512M
     links:
-     - jaeger
+     - jaeger-server
      - config-server
      - discovery-server
      - customers-service
@@ -95,9 +69,87 @@ services:
      - 8080:8080
      - 9091:9091
 
-  prometheus:
-    image: openapm/spring-petclinic-prometheus:opencensus-showcase
-    container_name: prometheus
+  # Infrastructure
+  # ============================================================================
+
+  config-server:
+    image: openapm/spring-petclinic-config-server
+    container_name: config-server
+    mem_limit: 512M
+    entrypoint: ["java","-Djava.security.egd=file:/dev/./urandom","-jar","/app.jar"]
+    ports:
+     - 8888:8888
+
+  discovery-server:
+    image: openapm/spring-petclinic-discovery-server
+    container_name: discovery-server
+    mem_limit: 512M
+    links:
+     - config-server
+    depends_on:
+      - config-server
+    entrypoint: ["./wait-for-it.sh","config-server:8888","--timeout=60","--","java","-Djava.security.egd=file:/dev/./urandom","-jar","/app.jar"]
+    ports:
+     - 8761:8761
+
+  # Load
+  # ============================================================================
+
+  load-server:
+    build: ./docker/load
+    container_name: openapm-load-server
+    mem_limit: 256M
+    depends_on:
+     - api-gateway
+     - customers-service
+     - visits-service
+     - vets-service
+    links:
+     - api-gateway
+     - customers-service
+     - visits-service
+     - vets-service
+
+# Monitoring
+# ============================================================================
+
+  influxdb-server:
+    build: ./docker/telegraf
+    container_name: openapm-influxdb
+    mem_limit: 512M
+    ports:
+     - 8086:8086
+
+  telegraf-server:
+    build: ./docker/telegraf
+    container_name: openapm-telegraf-server
+    mem_limit: 512M
+    depends_on:
+     - influxdb-server
+    links:
+     - influxdb-server
+     - api-gateway
+     - customers-service
+     - visits-service
+     - vets-service
+
+  grafana-server:
+    build: ./docker/grafana
+    container_name: openapm-grafana-server
+    mem_limit: 256M
+    depends_on:
+     - prometheus-server
+    links:
+     - prometheus-server
+    ports:
+     - 3002:3000
+    environment:
+     - GF_INSTALL_PLUGINS=https://github.com/openapm/grafana-flowmap/archive/master.zip;novatec-flowmap-panel
+
+  prometheus-server:
+    build: ./docker/prometheus
+    container_name: openapm-prometheus-server
+    mem_limit: 256M
     links:
      - api-gateway
      - customers-service
@@ -106,46 +158,20 @@ services:
     ports:
      - 9090:9090
 
-  load:
-    image: openapm/spring-petclinic-load:0.1.0
-    container_name: load
-    depends_on:
-     - api-gateway
-     - customers-service
-     - visits-service
-     - vets-service
-    links:
-     - api-gateway
-     - customers-service
-     - visits-service
-     - vets-service
+  # Trazing
+  # ============================================================================
 
-  influxdb:
-    image: openapm/spring-petclinic-influxdb:opencensus-showcase
-    container_name: influxdb
-    ports:
-     - 8086:8086
-
-  telegraf:
-    image: openapm/spring-petclinic-telegraf:opencensus-showcase
-    container_name: telegraf
-    depends_on:
-     - influxdb
-    links:
-     - influxdb
-     - api-gateway
-     - customers-service
-     - visits-service
-     - vets-service
-
-  grafana:
-    image: openapm/spring-petclinic-grafana:opencensus-showcase
-    container_name: grafana
-    depends_on:
-     - prometheus
-    links:
-     - prometheus
-    ports:
-     - 3002:3000
+  jaeger-server:
+    image: jaegertracing/all-in-one:latest
+    container_name: jaeger-server
+    mem_limit: 512M
     environment:
-     - GF_INSTALL_PLUGINS=https://github.com/openapm/grafana-flowmap/archive/master.zip;novatec-flowmap-panel
+     - COLLECTOR_ZIPKIN_HTTP_PORT=9411
+    ports:
+     - 5775:5775/udp
+     - 6831:6831/udp
+     - 6832:6832/udp
+     - 5778:5778
+     - 16686:16686
+     - 14268:14268
+     - 9411:9411

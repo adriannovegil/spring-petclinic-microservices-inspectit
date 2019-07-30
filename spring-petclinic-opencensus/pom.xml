@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <parent>
-        <artifactId>spring-petclinic-microservices</artifactId>
-        <groupId>org.springframework.samples</groupId>
-        <version>1.5.1</version>
-    </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>spring-petclinic-opencensus</artifactId>
     <groupId>org.springframework.samples.petclinic.opencensus</groupId>
+    <artifactId>spring-petclinic-opencensus</artifactId>
     <packaging>jar</packaging>
     <description>Spring PetClinic monitoring utilities</description>
+
+    <parent>
+        <groupId>org.springframework.samples</groupId>
+        <artifactId>spring-petclinic-microservices</artifactId>
+        <version>2.1.4</version>
+    </parent>
 
     <dependencies>
         <dependency>
@@ -56,15 +56,32 @@
             <artifactId>simpleclient_httpserver</artifactId>
             <version>0.4.0</version>
         </dependency>
-
         <dependency>
             <groupId>io.opencensus</groupId>
             <artifactId>opencensus-exporter-trace-jaeger</artifactId>
             <version>${opencensus.version}</version>
         </dependency>
+
+        <!-- Third parties -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
         </dependency>
     </dependencies>
+
+    <profiles>
+        <profile>
+            <id>buildDocker</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.spotify</groupId>
+                        <artifactId>docker-maven-plugin</artifactId>
+                        <version>${docker.plugin.version}</version>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
 </project>

@@ -24,7 +24,7 @@ import org.springframework.context.annotation.Profile;
  * @author Maciej Szarlinski
  */
 @Configuration
-//@EnableCaching
+@EnableCaching
 @Profile("production")
 class CacheConfig {
 }

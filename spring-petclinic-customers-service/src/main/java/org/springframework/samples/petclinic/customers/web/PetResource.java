@@ -15,18 +15,15 @@
  */
 package org.springframework.samples.petclinic.customers.web;
 
+import io.micrometer.core.annotation.Timed;
 import lombok.RequiredArgsConstructor;
-import io.opencensus.common.Scope;
-import org.springframework.samples.petclinic.opencensus.OpenCensusService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.samples.petclinic.customers.model.*;
-import org.springframework.samples.petclinic.monitoring.Monitored;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
+import java.util.Optional;
 
 /**
  * @author Juergen Hoeller
@@ -35,13 +32,14 @@ import java.util.concurrent.TimeUnit;
  * @author Maciej Szarlinski
  */
 @RestController
-@RequiredArgsConstructor(onConstructor = @__(@Autowired))
+@Timed("petclinic.pet")
+@RequiredArgsConstructor
 @Slf4j
 class PetResource {
 
     private final PetRepository petRepository;
-
     private final OwnerRepository ownerRepository;
+
 
     @GetMapping("/petTypes")
     public List<PetType> getPetTypes() {
@@ -49,56 +47,51 @@ class PetResource {
     }
 
     @PostMapping("/owners/{ownerId}/pets")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    @Monitored
-    public void processCreationForm(
+    @ResponseStatus(HttpStatus.CREATED)
+    public Pet processCreationForm(
         @RequestBody PetRequest petRequest,
         @PathVariable("ownerId") int ownerId) {
 
         final Pet pet = new Pet();
-        final Owner owner = ownerRepository.findOne(ownerId);
+        final Optional<Owner> optionalOwner = ownerRepository.findById(ownerId);
+        Owner owner = optionalOwner.orElseThrow(() -> new ResourceNotFoundException("Owner "+ownerId+" not found"));
         owner.addPet(pet);
 
-        save(pet, petRequest);
+        return save(pet, petRequest);
     }
 
     @PutMapping("/owners/*/pets/{petId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @Monitored
     public void processUpdateForm(@RequestBody PetRequest petRequest) {
-        save(petRepository.findOne(petRequest.getId()), petRequest);
+        int petId = petRequest.getId();
+        Pet pet = findPetById(petId);
+        save(pet, petRequest);
     }
 
-    private void save(final Pet pet, final PetRequest petRequest) {
+    private Pet save(final Pet pet, final PetRequest petRequest) {
 
-        try(Scope ss = OpenCensusService.getInstance().getTracer().getSpanBuilder("PetResource.save").startScopedSpan()) {
+        pet.setName(petRequest.getName());
+        pet.setBirthDate(petRequest.getBirthDate());
 
-            pet.setName(petRequest.getName());
-            pet.setBirthDate(petRequest.getBirthDate());
+        petRepository.findPetTypeById(petRequest.getTypeId())
+            .ifPresent(pet::setType);
 
-            // only do that is we have a "Snake" (type 4)
-            if (petRequest.getTypeId() == 4) {
-                try {
-                    TimeUnit.SECONDS.sleep(2);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-
-            petRepository.findPetTypeById(petRequest.getTypeId())
-                .ifPresent(pet::setType);
-
-            log.info("Saving pet {}", pet);
-            petRepository.save(pet);
-            OpenCensusService.getInstance().getTracer().getCurrentSpan().addAnnotation("Saving PetId " + petRequest.getTypeId());
-        
-        }
-    
+        log.info("Saving pet {}", pet);
+        return petRepository.save(pet);
     }
 
     @GetMapping("owners/*/pets/{petId}")
     public PetDetails findPet(@PathVariable("petId") int petId) {
-        return new PetDetails(petRepository.findOne(petId));
+        return new PetDetails(findPetById(petId));
+    }
+
+
+    private Pet findPetById(int petId) {
+        Optional<Pet> pet = petRepository.findById(petId);
+        if (!pet.isPresent()) {
+            throw new ResourceNotFoundException("Pet "+petId+" not found");
+        }
+        return pet.get();
     }
 
 }

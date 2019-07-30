@@ -15,42 +15,48 @@
  */
 package org.springframework.samples.petclinic.api.application;
 
-import io.opencensus.common.Scope;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpMethod;
-import org.springframework.samples.petclinic.opencensus.OpenCensusService;
-import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
-
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
+import lombok.RequiredArgsConstructor;
+import org.springframework.samples.petclinic.api.dto.VisitDetails;
+import org.springframework.samples.petclinic.api.dto.Visits;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
+
+
 import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.joining;
+import static org.springframework.web.util.UriComponentsBuilder.fromHttpUrl;
 
 /**
  * @author Maciej Szarlinski
  */
 @Component
-@RequiredArgsConstructor(onConstructor = @__(@Autowired))
+@RequiredArgsConstructor
 public class VisitsServiceClient {
 
     private final RestTemplate loadBalancedRestTemplate;
 
-    public Map<Integer, List<VisitDetails>> getVisitsForPets(final List<Integer> petIds, final int ownerId) {
-        try(Scope ss = OpenCensusService.getInstance().getTracer().getSpanBuilder("VisitsServiceClient.getVisitsForPets").startScopedSpan()) {
-            //TODO:  expose batch interface in Visit Service
-            final ParameterizedTypeReference<List<VisitDetails>> responseType = new ParameterizedTypeReference<List<VisitDetails>>() {
-            };
-            
-            Map<Integer, List<VisitDetails>> returnVisits = petIds.stream()
-                .flatMap(petId -> loadBalancedRestTemplate.exchange("http://visits-service/owners/{ownerId}/pets/{petId}/visits", HttpMethod.GET, null,
-                    responseType, ownerId, petId).getBody().stream())
-                .collect(groupingBy(VisitDetails::getPetId));
-            OpenCensusService.getInstance().getTracer().getCurrentSpan().addAnnotation("Finished getVisitsForPets");
-            return returnVisits;
-       }
+    @HystrixCommand(fallbackMethod = "emptyVisitsForPets")
+    public Map<Integer, List<VisitDetails>> getVisitsForPets(final List<Integer> petIds) {
+        UriComponentsBuilder builder = fromHttpUrl("http://visits-service/pets/visits")
+            .queryParam("petId", joinIds(petIds));
+
+        return loadBalancedRestTemplate.getForObject(builder.toUriString(), Visits.class)
+            .getItems()
+            .stream()
+            .collect(groupingBy(VisitDetails::getPetId));
     }
 
+    private String joinIds(List<Integer> petIds) {
+        return petIds.stream().map(Object::toString).collect(joining(","));
+    }
+
+    private Map<Integer, List<VisitDetails>> emptyVisitsForPets(List<Integer> petIds) {
+        return Collections.emptyMap();
+    }
 }

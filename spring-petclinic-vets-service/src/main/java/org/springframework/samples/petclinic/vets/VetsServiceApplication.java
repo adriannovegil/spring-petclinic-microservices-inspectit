@@ -19,11 +19,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
-import org.springframework.samples.petclinic.opencensus.OpenCensusService;
 import org.springframework.samples.petclinic.vets.system.VetsProperties;
-
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 
 /**
  * @author Maciej Szarlinski
@@ -33,8 +29,7 @@ import java.net.UnknownHostException;
 @EnableConfigurationProperties(VetsProperties.class)
 public class VetsServiceApplication {
 
-	public static void main(String[] args) throws UnknownHostException {
-        OpenCensusService.getInstance().registerContext("PetClinic", "vets-service", InetAddress.getLocalHost().getHostName());
-	    SpringApplication.run(VetsServiceApplication.class, args);
+	public static void main(String[] args) {
+		SpringApplication.run(VetsServiceApplication.class, args);
 	}
 }

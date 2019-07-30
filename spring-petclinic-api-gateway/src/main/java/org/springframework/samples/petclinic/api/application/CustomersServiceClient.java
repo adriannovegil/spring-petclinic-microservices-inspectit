@@ -15,10 +15,8 @@
  */
 package org.springframework.samples.petclinic.api.application;
 
-import io.opencensus.common.Scope;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.samples.petclinic.opencensus.OpenCensusService;
+import org.springframework.samples.petclinic.api.dto.OwnerDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
@@ -26,16 +24,12 @@ import org.springframework.web.client.RestTemplate;
  * @author Maciej Szarlinski
  */
 @Component
-@RequiredArgsConstructor(onConstructor = @__(@Autowired))
+@RequiredArgsConstructor
 public class CustomersServiceClient {
 
     private final RestTemplate loadBalancedRestTemplate;
 
     public OwnerDetails getOwner(final int ownerId) {
-        try(Scope ss = OpenCensusService.getInstance().getTracer().getSpanBuilder("CustomersServiceClient.getOwner").startScopedSpan()) {
-            OwnerDetails returnOwnerDetails = loadBalancedRestTemplate.getForObject("http://customers-service/owners/{ownerId}", OwnerDetails.class, ownerId);
-            OpenCensusService.getInstance().getTracer().getCurrentSpan().addAnnotation("Finished getOwner");
-            return returnOwnerDetails;
-        }
+        return loadBalancedRestTemplate.getForObject("http://customers-service/owners/{ownerId}", OwnerDetails.class, ownerId);
     }
 }
