@@ -24,7 +24,6 @@
         <module>spring-petclinic-discovery-server</module>
         <module>spring-petclinic-api-gateway</module>
         <module>spring-petclinic-hystrix-dashboard</module>
-        <module>spring-petclinic-opencensus</module>
     </modules>
 
     <properties>

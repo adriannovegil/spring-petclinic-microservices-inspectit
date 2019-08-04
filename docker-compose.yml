@@ -1,103 +1,285 @@
 version: '2'
-
 services:
 
-  customers-service:
-    image: openapm/spring-petclinic-customers-service
-    container_name: customers-service
+  # Monitoring
+  # ============================================================================
+  # InspoectIT agent
+  agent:
+    image: inspectit/inspectit-ocelot-agent:${INSPECTIT_OCELOT_VERSION}
+    container_name: agent
     mem_limit: 512M
-    links:
-     - jaeger-server
-     - config-server
-     - discovery-server
-    depends_on:
-     - config-server
-     - discovery-server
-    entrypoint: ["./wait-for-it.sh","discovery-server:8761","--timeout=60","--","java","-DpromPort=9092","-DjaegerService=jaeger:14268","-Djava.security.egd=file:/dev/./urandom","-jar","/app.jar"]
-    ports:
-    - 8081:8081
-    - 9092:9092
+    volumes:
+      - agent-vol:/agent
 
-  visits-service:
-    image: openapm/spring-petclinic-visits-service
-    container_name: visits-service
+  # InfluxDB
+  influxdb-server:
+    image: influxdb:1.7.1
+    container_name: influxdb-server
     mem_limit: 512M
-    links:
-     - jaeger-server
-     - config-server
-     - discovery-server
-    depends_on:
-     - config-server
-     - discovery-server
-    entrypoint: ["./wait-for-it.sh","discovery-server:8761","--timeout=60","--","java","-DpromPort=9094","-DjaegerService=jaeger:14268","-Djava.security.egd=file:/dev/./urandom","-jar","/app.jar"]
+    environment:
+      - INFLUXDB_HTTP_FLUX_ENABLED=true
+      - INFLUXDB_HTTP_LOG_ENABLED=false
+      - INFLUXDB_DATA_QUERY_LOG_ENABLED=false
+    volumes:
+      - ./docker/influxdb-server:/docker-entrypoint-initdb.d
     ports:
-     - 8082:8082
-     - 9094:9094
+     - 8086:8086
 
-  vets-service:
-    image: openapm/spring-petclinic-vets-service
-    container_name: vets-service
+  # Telegraf
+  telegraf-server:
+    image: telegraf:1.9.4
+    container_name: telegraf-server
     mem_limit: 512M
-    links:
-     - jaeger-server
-     - config-server
-     - discovery-server
-    depends_on:
-     - config-server
-     - discovery-server
-    entrypoint: ["./wait-for-it.sh","discovery-server:8761","--timeout=60","--","java","-DpromPort=9093","-DjaegerService=jaeger:14268","-Djava.security.egd=file:/dev/./urandom","-jar","/app.jar"]
-    ports:
-     - 8083:8083
-     - 9093:9093
+    volumes:
+     - ./docker/telegraf-server/telegraf-influx.conf:/etc/telegraf/telegraf.conf:ro
 
-  api-gateway:
-    image: openapm/spring-petclinic-api-gateway
-    container_name: api-gateway
-    mem_limit: 512M
-    links:
-     - jaeger-server
-     - config-server
-     - discovery-server
-     - customers-service
-     - visits-service
-     - vets-service
-    depends_on:
-     - config-server
-     - discovery-server
-    entrypoint: ["./wait-for-it.sh","discovery-server:8761","--timeout=60","--","java","-DpromPort=9091","-DjaegerService=jaeger:14268","-Djava.security.egd=file:/dev/./urandom","-jar","/app.jar"]
+  # Zipkin
+  zipkin-server:
+    image: openzipkin/zipkin
+    container_name: zipkin-server
     ports:
-     - 8080:8080
-     - 9091:9091
+      - 9411:9411
+
+  # Grafana
+  grafana-server:
+    build: ./docker/grafana-server
+    image: openapm/grafana-server
+    container_name: grafana-server
+    mem_limit: 256M
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=demo
+      - GF_PATHS_PROVISIONING=/usr/share/grafana/custom/
+    volumes:
+      - ./docker/grafana-server/provisioning:/usr/share/grafana/custom/
+    ports:
+      - 3001:3000
 
   # Infrastructure
   # ============================================================================
-
+  # Config server
   config-server:
     image: openapm/spring-petclinic-config-server
     container_name: config-server
+    environment:
+      - INSPECTIT_SERVICE_NAME=config-server
+      - INSPECTIT_CONFIG_FILE_BASED_PATH=/agentconfig
+      - INSPECTIT_EXPORTERS_METRICS_PROMETHEUS_PORT=9095
+      - INSPECTIT_EXPORTERS_TRACING_ZIPKIN_URL=http://zipkin-server:9411/api/v2/spans
     mem_limit: 512M
-    entrypoint: ["java","-Djava.security.egd=file:/dev/./urandom","-jar","/app.jar"]
+    entrypoint: ["sh", "-c","
+      java -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -Djava.security.egd=file:/dev/./urandom
+      -javaagent:/agent/inspectit-ocelot-agent.jar
+      -jar /app.jar"]
+    #entrypoint: ["java","-Djava.security.egd=file:/dev/./urandom","-jar","/app.jar"]
+    volumes:
+      - ./agentconfig/config-server:/agentconfig
+      - agent-vol:/agent
     ports:
      - 8888:8888
+     - 9095:9095
 
+  # Discovery service
   discovery-server:
     image: openapm/spring-petclinic-discovery-server
     container_name: discovery-server
+    environment:
+      - INSPECTIT_SERVICE_NAME=discovery-server
+      - INSPECTIT_CONFIG_FILE_BASED_PATH=/agentconfig
+      - INSPECTIT_EXPORTERS_METRICS_PROMETHEUS_PORT=9096
+      - INSPECTIT_EXPORTERS_TRACING_ZIPKIN_URL=http://zipkin-server:9411/api/v2/spans
     mem_limit: 512M
     links:
      - config-server
     depends_on:
       - config-server
-    entrypoint: ["./wait-for-it.sh","config-server:8888","--timeout=60","--","java","-Djava.security.egd=file:/dev/./urandom","-jar","/app.jar"]
+      - agent
+    entrypoint: ["sh", "-c","
+      ./dockerize -wait=tcp://config-server:8888 -timeout=120s -- &&
+      java -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -Djava.security.egd=file:/dev/./urandom
+      -javaagent:/agent/inspectit-ocelot-agent.jar
+      -jar /app.jar"]
+    #entrypoint: ["./wait-for-it.sh","config-server:8888","--timeout=60","--","java","-Djava.security.egd=file:/dev/./urandom","-jar","/app.jar"]
+    volumes:
+      - ./agentconfig/discovery-server:/agentconfig
+      - agent-vol:/agent
     ports:
      - 8761:8761
+     - 9096:9096
+
+  # Hystrix dashboard
+#  hystrix-dashboard:
+#    image: openapm/spring-petclinic-hystrix-dashboard
+#    container_name: hystrix-dashboard
+#    environment:
+#      - INSPECTIT_SERVICE_NAME=hystrix-dashboard
+#      - INSPECTIT_CONFIG_FILE_BASED_PATH=/agentconfig
+#      - INSPECTIT_EXPORTERS_METRICS_PROMETHEUS_PORT=9097
+#      - INSPECTIT_EXPORTERS_TRACING_ZIPKIN_URL=http://zipkin-server:9411/api/v2/spans
+#    mem_limit: 512M
+#    depends_on:
+#     - config-server
+#     - discovery-server
+#     - agent
+#    #entrypoint: ["./dockerize","-wait=tcp://discovery-server:8761","-timeout=60s","--","java", "-XX:+UnlockExperimentalVMOptions", "-XX:+UseCGroupMemoryLimitForHeap", "-Djava.security.egd=file:/dev/./urandom","-jar","/app.jar"]
+#    ports:
+#     - 7979:7979
+#     - 9097:9097
+
+  # Admin server
+#  admin-server:
+#    image: openapm/spring-petclinic-admin-server
+#    container_name: admin-server
+#    environment:
+#      - INSPECTIT_SERVICE_NAME=admin-server
+#      - INSPECTIT_CONFIG_FILE_BASED_PATH=/agentconfig
+#      - INSPECTIT_EXPORTERS_METRICS_PROMETHEUS_PORT=9098
+#      - INSPECTIT_EXPORTERS_TRACING_ZIPKIN_URL=http://zipkin-server:9411/api/v2/spans
+#    mem_limit: 512M
+#    depends_on:
+#     - config-server
+#     - discovery-server
+#     - agent
+#    #entrypoint: ["./dockerize","-wait=tcp://discovery-server:8761","-timeout=60s","--","java", "-XX:+UnlockExperimentalVMOptions", "-XX:+UseCGroupMemoryLimitForHeap", "-Djava.security.egd=file:/dev/./urandom","-jar","/app.jar"]
+#    ports:
+#     - 9090:9090
+#     - 9098:9098
+
+  # Services
+  # ============================================================================
+  # API gateway
+  api-gateway:
+    image: openapm/spring-petclinic-api-gateway
+    container_name: api-gateway
+    environment:
+      - INSPECTIT_SERVICE_NAME=api-gateway
+      - INSPECTIT_CONFIG_FILE_BASED_PATH=/agentconfig
+      - INSPECTIT_EXPORTERS_METRICS_PROMETHEUS_PORT=9094
+      - INSPECTIT_EXPORTERS_TRACING_ZIPKIN_URL=http://zipkin-server:9411/api/v2/spans
+    mem_limit: 512M
+    links:
+     - zipkin-server
+     - config-server
+     - discovery-server
+     - customers-service
+     - visits-service
+     - vets-service
+    depends_on:
+     - config-server
+     - discovery-server
+     - agent
+    entrypoint: ["sh", "-c","
+      ./dockerize -wait=tcp://discovery-server:8761 -timeout=120s -- &&
+      java -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -Djava.security.egd=file:/dev/./urandom
+      -javaagent:/agent/inspectit-ocelot-agent.jar
+      -jar /app.jar"]
+    volumes:
+      - ./agentconfig/api-gateway:/agentconfig
+      - agent-vol:/agent
+    #entrypoint: ["./wait-for-it.sh","discovery-server:8761","--timeout=60","--","java","-DpromPort=9091","-DjaegerService=jaeger:14268","-Djava.security.egd=file:/dev/./urandom","-jar","/app.jar"]
+    ports:
+     - 8080:8080
+     - 9094:9094
+
+  # Customers service
+  customers-service:
+    image: openapm/spring-petclinic-customers-service
+    container_name: customers-service
+    environment:
+      - INSPECTIT_SERVICE_NAME=customers-service
+      - INSPECTIT_CONFIG_FILE_BASED_PATH=/agentconfig
+      - INSPECTIT_EXPORTERS_METRICS_PROMETHEUS_PORT=9091
+      - INSPECTIT_EXPORTERS_TRACING_ZIPKIN_URL=http://zipkin-server:9411/api/v2/spans
+    mem_limit: 512M
+    links:
+     - zipkin-server
+     - config-server
+     - discovery-server
+    depends_on:
+     - config-server
+     - discovery-server
+     - agent
+    entrypoint: ["sh", "-c","
+      ./dockerize -wait=tcp://discovery-server:8761 -timeout=120s -- &&
+      java -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -Djava.security.egd=file:/dev/./urandom
+      -javaagent:/agent/inspectit-ocelot-agent.jar
+      -jar /app.jar"]
+    #entrypoint: ["./wait-for-it.sh","discovery-server:8761","--timeout=60","--","java","-DpromPort=9092","-DjaegerService=jaeger:14268","-Djava.security.egd=file:/dev/./urandom","-jar","/app.jar"]
+    volumes:
+      - ./agentconfig/customers-service:/agentconfig
+      - agent-vol:/agent
+    ports:
+     - 8081:8081
+     - 9091:9091
+
+  # Visits service
+  visits-service:
+    image: openapm/spring-petclinic-visits-service
+    container_name: visits-service
+    environment:
+      - INSPECTIT_SERVICE_NAME=visits-service
+      - INSPECTIT_CONFIG_FILE_BASED_PATH=/agentconfig
+      - INSPECTIT_EXPORTERS_METRICS_PROMETHEUS_PORT=9092
+      - INSPECTIT_EXPORTERS_TRACING_ZIPKIN_URL=http://zipkin-server:9411/api/v2/spans
+    mem_limit: 512M
+    links:
+     - zipkin-server
+     - config-server
+     - discovery-server
+    depends_on:
+     - config-server
+     - discovery-server
+     - agent
+    entrypoint: ["sh", "-c","
+      ./dockerize -wait=tcp://discovery-server:8761 -timeout=120s -- &&
+      java -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -Djava.security.egd=file:/dev/./urandom
+      -javaagent:/agent/inspectit-ocelot-agent.jar
+      -jar /app.jar"]
+    #entrypoint: ["./wait-for-it.sh","discovery-server:8761","--timeout=60","--","java","-DpromPort=9094","-DjaegerService=jaeger:14268","-Djava.security.egd=file:/dev/./urandom","-jar","/app.jar"]
+    volumes:
+      - ./agentconfig/visits-service:/agentconfig
+      - agent-vol:/agent
+    ports:
+     - 8082:8082
+     - 9092:9092
+
+  #Vets service
+  vets-service:
+    image: openapm/spring-petclinic-vets-service
+    container_name: vets-service
+    environment:
+      - INSPECTIT_SERVICE_NAME=vets-service
+      - INSPECTIT_CONFIG_FILE_BASED_PATH=/agentconfig
+      - INSPECTIT_EXPORTERS_METRICS_PROMETHEUS_PORT=9093
+      - INSPECTIT_EXPORTERS_TRACING_ZIPKIN_URL=http://zipkin-server:9411/api/v2/spans
+    mem_limit: 512M
+    links:
+     - zipkin-server
+     - config-server
+     - discovery-server
+    depends_on:
+     - config-server
+     - discovery-server
+     - agent
+    entrypoint: ["sh", "-c","
+      ./dockerize -wait=tcp://discovery-server:8761 -timeout=120s -- &&
+      java -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -Djava.security.egd=file:/dev/./urandom
+      -javaagent:/agent/inspectit-ocelot-agent.jar
+      -jar /app.jar"]
+    #entrypoint: ["./wait-for-it.sh","discovery-server:8761","--timeout=60","--","java","-DpromPort=9093","-DjaegerService=jaeger:14268","-Djava.security.egd=file:/dev/./urandom","-jar","/app.jar"]
+    volumes:
+      - ./agentconfig/vets-service:/agentconfig
+      - agent-vol:/agent
+    ports:
+     - 8083:8083
+     - 9093:9093
 
   # Load
   # ============================================================================
 
   load-server:
-    build: ./docker/load
-    container_name: openapm-load-server
+    build: ./docker/load-server
+    image: openapm/load-server
+    container_name: load-server
     mem_limit: 256M
     depends_on:
      - api-gateway
@@ -110,68 +292,5 @@ services:
      - visits-service
      - vets-service
 
-# Monitoring
-# ============================================================================
-
-  influxdb-server:
-    build: ./docker/telegraf
-    container_name: openapm-influxdb
-    mem_limit: 512M
-    ports:
-     - 8086:8086
-
-  telegraf-server:
-    build: ./docker/telegraf
-    container_name: openapm-telegraf-server
-    mem_limit: 512M
-    depends_on:
-     - influxdb-server
-    links:
-     - influxdb-server
-     - api-gateway
-     - customers-service
-     - visits-service
-     - vets-service
-
-  grafana-server:
-    build: ./docker/grafana
-    container_name: openapm-grafana-server
-    mem_limit: 256M
-    depends_on:
-     - prometheus-server
-    links:
-     - prometheus-server
-    ports:
-     - 3002:3000
-    environment:
-     - GF_INSTALL_PLUGINS=https://github.com/openapm/grafana-flowmap/archive/master.zip;novatec-flowmap-panel
-
-  prometheus-server:
-    build: ./docker/prometheus
-    container_name: openapm-prometheus-server
-    mem_limit: 256M
-    links:
-     - api-gateway
-     - customers-service
-     - visits-service
-     - vets-service
-    ports:
-     - 9090:9090
-
-  # Trazing
-  # ============================================================================
-
-  jaeger-server:
-    image: jaegertracing/all-in-one:latest
-    container_name: jaeger-server
-    mem_limit: 512M
-    environment:
-     - COLLECTOR_ZIPKIN_HTTP_PORT=9411
-    ports:
-     - 5775:5775/udp
-     - 6831:6831/udp
-     - 6832:6832/udp
-     - 5778:5778
-     - 16686:16686
-     - 14268:14268
-     - 9411:9411
+volumes:
+  agent-vol:
