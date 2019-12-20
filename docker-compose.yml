@@ -28,7 +28,6 @@ services:
       java -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -Djava.security.egd=file:/dev/./urandom
       -javaagent:/agent/inspectit-ocelot-agent.jar
       -jar /app.jar"]
-    #entrypoint: ["java","-Djava.security.egd=file:/dev/./urandom","-jar","/app.jar"]
     volumes:
       - ./agentconfig/config-server:/agentconfig
       - agent-vol:/agent
@@ -49,53 +48,16 @@ services:
       - config-server
       - agent
     entrypoint: ["sh", "-c","
-      ./dockerize -wait=tcp://config-server:8888 -timeout=120s -- &&
+      ./dockerize -wait=tcp://config-server:8888 -timeout=300s -- &&
       java -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -Djava.security.egd=file:/dev/./urandom
       -javaagent:/agent/inspectit-ocelot-agent.jar
       -jar /app.jar"]
-    #entrypoint: ["./wait-for-it.sh","config-server:8888","--timeout=60","--","java","-Djava.security.egd=file:/dev/./urandom","-jar","/app.jar"]
     volumes:
       - ./agentconfig/discovery-server:/agentconfig
       - agent-vol:/agent
     ports:
       - 8761:8761
       - 9096:9096
-
-  # Hystrix dashboard
-#  hystrix-dashboard:
-#    image: inspectit/spring-petclinic-hystrix-dashboard
-#    container_name: inspectit-hystrix-dashboard
-#    environment:
-#      - INSPECTIT_SERVICE_NAME=hystrix-dashboard
-#      - INSPECTIT_CONFIG_FILE_BASED_PATH=/agentconfig
-#      - INSPECTIT_EXPORTERS_METRICS_PROMETHEUS_PORT=9097
-#      - INSPECTIT_EXPORTERS_TRACING_ZIPKIN_URL=http://zipkin-server:9411/api/v2/spans
-#    depends_on:
-#     - config-server
-#     - discovery-server
-#     - agent
-#    #entrypoint: ["./dockerize","-wait=tcp://discovery-server:8761","-timeout=60s","--","java", "-XX:+UnlockExperimentalVMOptions", "-XX:+UseCGroupMemoryLimitForHeap", "-Djava.security.egd=file:/dev/./urandom","-jar","/app.jar"]
-#    ports:
-#     - 7979:7979
-#     - 9097:9097
-
-  # Admin server
-#  admin-server:
-#    image: inspectit/spring-petclinic-admin-server
-#    container_name: inspectit-admin-server
-#    environment:
-#      - INSPECTIT_SERVICE_NAME=admin-server
-#      - INSPECTIT_CONFIG_FILE_BASED_PATH=/agentconfig
-#      - INSPECTIT_EXPORTERS_METRICS_PROMETHEUS_PORT=9098
-#      - INSPECTIT_EXPORTERS_TRACING_ZIPKIN_URL=http://zipkin-server:9411/api/v2/spans
-#    depends_on:
-#     - config-server
-#     - discovery-server
-#     - agent
-#    #entrypoint: ["./dockerize","-wait=tcp://discovery-server:8761","-timeout=60s","--","java", "-XX:+UnlockExperimentalVMOptions", "-XX:+UseCGroupMemoryLimitForHeap", "-Djava.security.egd=file:/dev/./urandom","-jar","/app.jar"]
-#    ports:
-#     - 9090:9090
-#     - 9098:9098
 
   # Services
   # ============================================================================
@@ -113,11 +75,10 @@ services:
       - discovery-server
       - agent
     entrypoint: ["sh", "-c","
-      ./dockerize -wait=tcp://discovery-server:8761 -timeout=120s -- &&
+      ./dockerize -wait=tcp://discovery-server:8761 -timeout=300s -- &&
       java -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -Djava.security.egd=file:/dev/./urandom
       -javaagent:/agent/inspectit-ocelot-agent.jar
       -jar /app.jar"]
-    #entrypoint: ["./wait-for-it.sh","discovery-server:8761","--timeout=60","--","java","-DpromPort=9092","-DjaegerService=jaeger:14268","-Djava.security.egd=file:/dev/./urandom","-jar","/app.jar"]
     volumes:
       - ./agentconfig/customers-service:/agentconfig
       - agent-vol:/agent
@@ -139,11 +100,10 @@ services:
       - discovery-server
       - agent
     entrypoint: ["sh", "-c","
-      ./dockerize -wait=tcp://discovery-server:8761 -timeout=120s -- &&
+      ./dockerize -wait=tcp://discovery-server:8761 -timeout=300s -- &&
       java -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -Djava.security.egd=file:/dev/./urandom
       -javaagent:/agent/inspectit-ocelot-agent.jar
       -jar /app.jar"]
-    #entrypoint: ["./wait-for-it.sh","discovery-server:8761","--timeout=60","--","java","-DpromPort=9094","-DjaegerService=jaeger:14268","-Djava.security.egd=file:/dev/./urandom","-jar","/app.jar"]
     volumes:
       - ./agentconfig/visits-service:/agentconfig
       - agent-vol:/agent
@@ -165,11 +125,10 @@ services:
       - discovery-server
       - agent
     entrypoint: ["sh", "-c","
-      ./dockerize -wait=tcp://discovery-server:8761 -timeout=120s -- &&
+      ./dockerize -wait=tcp://discovery-server:8761 -timeout=300s -- &&
       java -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -Djava.security.egd=file:/dev/./urandom
       -javaagent:/agent/inspectit-ocelot-agent.jar
       -jar /app.jar"]
-    #entrypoint: ["./wait-for-it.sh","discovery-server:8761","--timeout=60","--","java","-DpromPort=9093","-DjaegerService=jaeger:14268","-Djava.security.egd=file:/dev/./urandom","-jar","/app.jar"]
     volumes:
       - ./agentconfig/vets-service:/agentconfig
       - agent-vol:/agent
@@ -191,35 +150,66 @@ services:
       - discovery-server
       - agent
     entrypoint: ["sh", "-c","
-      ./dockerize -wait=tcp://discovery-server:8761 -timeout=120s -- &&
+      ./dockerize -wait=tcp://discovery-server:8761 -timeout=300s -- &&
       java -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -Djava.security.egd=file:/dev/./urandom
       -javaagent:/agent/inspectit-ocelot-agent.jar
       -jar /app.jar"]
     volumes:
       - ./agentconfig/api-gateway:/agentconfig
       - agent-vol:/agent
-    #entrypoint: ["./wait-for-it.sh","discovery-server:8761","--timeout=60","--","java","-DpromPort=9091","-DjaegerService=jaeger:14268","-Djava.security.egd=file:/dev/./urandom","-jar","/app.jar"]
     ports:
       - 8080:8080
       - 9094:9094
 
-  # Load
+  # Admin Server
   # ============================================================================
-  # Load server
-  load-server:
-    build: ./docker/load-server
-    image: inspectit/load-server
-    container_name: inspectit-load-server
+  admin-server:
+    image: inspectit/spring-petclinic-admin-server
+    container_name: inspectit-admin-server
+    environment:
+      - INSPECTIT_SERVICE_NAME=admin-server
+      - INSPECTIT_CONFIG_FILE_BASED_PATH=/agentconfig
+      - INSPECTIT_EXPORTERS_METRICS_PROMETHEUS_PORT=9094
+      - INSPECTIT_EXPORTERS_TRACING_ZIPKIN_URL=http://zipkin-server:9411/api/v2/spans
     depends_on:
-      - api-gateway
-      - customers-service
-      - visits-service
-      - vets-service
-    links:
-      - api-gateway
-      - customers-service
-      - visits-service
-      - vets-service
+     - config-server
+     - discovery-server
+     - agent
+    entrypoint: ["sh", "-c","
+      ./dockerize -wait=tcp://config-server:8888 -timeout=300s -- &&
+      java -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -Djava.security.egd=file:/dev/./urandom
+      -javaagent:/agent/inspectit-ocelot-agent.jar
+      -jar /app.jar"]
+    volumes:
+      - ./agentconfig/admin-server:/agentconfig
+      - agent-vol:/agent
+    ports:
+     - 9090:9090
+
+  # Circuit breaker
+  # ============================================================================
+  hystrix-dashboard:
+    image: inspectit/spring-petclinic-hystrix-dashboard
+    container_name: inspectit-hystrix-dashboard
+    environment:
+      - INSPECTIT_SERVICE_NAME=hystrix-dashboard
+      - INSPECTIT_CONFIG_FILE_BASED_PATH=/agentconfig
+      - INSPECTIT_EXPORTERS_METRICS_PROMETHEUS_PORT=9094
+      - INSPECTIT_EXPORTERS_TRACING_ZIPKIN_URL=http://zipkin-server:9411/api/v2/spans
+    depends_on:
+     - config-server
+     - discovery-server
+     - agent
+    entrypoint: ["sh", "-c","
+      ./dockerize -wait=tcp://config-server:8888 -timeout=300s -- &&
+      java -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -Djava.security.egd=file:/dev/./urandom
+      -javaagent:/agent/inspectit-ocelot-agent.jar
+      -jar /app.jar"]
+    volumes:
+      - ./agentconfig/hystrix-dashboard:/agentconfig
+      - agent-vol:/agent
+    ports:
+     - 7979:7979
 
   # Metrics
   # ============================================================================
@@ -231,11 +221,6 @@ services:
       - INFLUXDB_HTTP_FLUX_ENABLED=true
       - INFLUXDB_HTTP_LOG_ENABLED=false
       - INFLUXDB_DATA_QUERY_LOG_ENABLED=false
-    depends_on:
-      - api-gateway
-      - customers-service
-      - visits-service
-      - vets-service
     volumes:
       - ./docker/influxdb-server:/docker-entrypoint-initdb.d
     ports:
@@ -247,12 +232,6 @@ services:
     container_name: inspectit-telegraf-server
     volumes:
       - ./docker/telegraf-server/telegraf-influx.conf:/etc/telegraf/telegraf.conf:ro
-    depends_on:
-      - api-gateway
-      - customers-service
-      - visits-service
-      - vets-service
-      - influxdb-server
 
   # Grafana
   grafana-server:
@@ -275,13 +254,21 @@ services:
   zipkin-server:
     image: openzipkin/zipkin
     container_name: inspectit-zipkin-server
+    ports:
+      - 9411:9411
+
+  # Load
+  # ============================================================================
+  # Load server
+  load-server:
+    build: ./docker/load-server
+    image: inspectit/load-server
+    container_name: inspectit-load-server
     depends_on:
       - api-gateway
       - customers-service
       - visits-service
       - vets-service
-    ports:
-      - 9411:9411
 
 volumes:
   agent-vol:

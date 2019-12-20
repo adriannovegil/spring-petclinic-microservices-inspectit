@@ -1,6 +1,6 @@
 # Distributed version of the Spring PetClinic Sample Application built with Spring Cloud
 
-__OpenAPM Demo:__ OpenCensus, Jaeger, Prometheus, Grafana
+__OpenAPM Demo__
 
 ## Starting services locally without Docker
 
@@ -49,6 +49,12 @@ Once images are ready, you can start them with a single command
 
 After starting services it takes a while for `API Gateway` to be in sync with service registry, so don't be scared of initial Zuul timeouts.
 
+You can tell Config Server to use your local Git repository by using `local` Spring profile and setting
+`GIT_REPO` environment variable, for example:
+`-Dspring.profiles.active=local -DGIT_REPO=/projects/spring-petclinic-microservices-config`
+
+*NOTE: Under MacOSX or Windows, make sure that the Docker VM has enough memory to run the microservices. The default settings
+are usually not enough and make the `docker-compose up` painfully slow.*
 
 ## Database configuration
 
