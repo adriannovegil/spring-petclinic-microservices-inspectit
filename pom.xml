@@ -10,7 +10,7 @@
     </parent>
 
     <groupId>org.springframework.samples</groupId>
-    <artifactId>spring-petclinic-microservices</artifactId>
+    <artifactId>spring-petclinic-microservices-inspectit</artifactId>
     <version>2.1.4</version>
     <name>${project.artifactId}</name>
     <packaging>pom</packaging>
@@ -40,7 +40,6 @@
         <docker.image.dockerfile.dir>${basedir}</docker.image.dockerfile.dir>
         <docker.image.dockerize.version>v0.6.1</docker.image.dockerize.version>
         <docker.plugin.version>1.2.0</docker.plugin.version>
-        <opencensus.version>0.16.1</opencensus.version>
     </properties>
 
     <dependencyManagement>
@@ -51,11 +50,6 @@
                 <version>${spring-cloud.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
-            </dependency>
-            <dependency>
-                <artifactId>spring-petclinic-opencensus</artifactId>
-                <groupId>org.springframework.samples.petclinic.opencensus</groupId>
-                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.springframework.boot</groupId>
