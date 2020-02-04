@@ -15,7 +15,7 @@ services:
   # ============================================================================
   # Config server
   config-server:
-    image: inspectit/spring-petclinic-config-server
+    image: inspectit/config-server
     container_name: inspectit-config-server
     depends_on:
       - agent
@@ -37,7 +37,7 @@ services:
 
   # Discovery service
   discovery-server:
-    image: inspectit/spring-petclinic-discovery-server
+    image: inspectit/discovery-server
     container_name: inspectit-discovery-server
     environment:
       - INSPECTIT_SERVICE_NAME=discovery-server
@@ -164,7 +164,7 @@ services:
   # Admin Server
   # ============================================================================
   admin-server:
-    image: inspectit/spring-petclinic-admin-server
+    image: inspectit/admin-server
     container_name: inspectit-admin-server
     environment:
       - INSPECTIT_SERVICE_NAME=admin-server
@@ -189,7 +189,7 @@ services:
   # Circuit breaker
   # ============================================================================
   hystrix-dashboard:
-    image: inspectit/spring-petclinic-hystrix-dashboard
+    image: inspectit/hystrix-dashboard
     container_name: inspectit-hystrix-dashboard
     environment:
       - INSPECTIT_SERVICE_NAME=hystrix-dashboard
