@@ -21,7 +21,7 @@ class Grafana(object):
             "name": self.env("DS_NAME", "inspectit-influx"),
             "type": self.env("DS_TYPE", "influxdb"),
             "access": self.env("DS_ACCESS", "proxy"),
-            "url": self.env("DS_URL", "http://influxdb-server:8086"),
+            "url": self.env("DS_URL, "http://influxdb-server:8086"),
             "password": self.env("DS_PASS", "root"),
             "user": self.env("DS_USER", "root"),
             "database": self.env("DS_DB", "inspectit"),
@@ -36,21 +36,21 @@ class Grafana(object):
         self.gf_url_datasources = urlunparse(
             (
                 self.scheme,
-                ":".join((self.env("GF_HOST", "localhost"), self.env("GF_PORT", "3000"))),
+                ":".join((self.env("GF_HOST", "grafana-server"), self.env("GF_PORT", "3000"))),
                 self.api_path_datasources, "", "", ""
             )
         )
         self.gf_url_gnet = urlunparse(
             (
                 self.scheme,
-                ":".join((self.env("GF_HOST", "localhost"), self.env("GF_PORT", "3000"))),
+                ":".join((self.env("GF_HOST", "grafana-server"), self.env("GF_PORT", "3000"))),
                 self.api_path_gnet, "", "", ""
             )
         )
         self.gf_url_import = urlunparse(
             (
                 self.scheme,
-                ":".join((self.env("GF_HOST", "localhost"), self.env("GF_PORT", "3000"))),
+                ":".join((self.env("GF_HOST", "grafana-server"), self.env("GF_PORT", "3000"))),
                 self.api_path_import, "", "", ""
             )
         )
