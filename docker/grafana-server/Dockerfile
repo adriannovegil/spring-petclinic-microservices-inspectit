@@ -1,11 +1,4 @@
-FROM grafana/grafana:4.0.2
+FROM grafana/grafana:5.3.2
 
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends python python-requests && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+COPY provisioning /usr/share/grafana/custom/
 
-COPY start.py /start.py
-RUN chmod +x start.py
-
-ENTRYPOINT ["/start.py"]

@@ -240,13 +240,12 @@ services:
     container_name: inspectit-grafana-server
     depends_on:
       - influxdb-server
+    ports:
+      - 3000:3000
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=demo
       - GF_PATHS_PROVISIONING=/usr/share/grafana/custom/
-    volumes:
-      - ./docker/grafana-server/provisioning:/usr/share/grafana/custom/
-    ports:
-      - 3000:3000
+
 
   # Trazing
   # ============================================================================
