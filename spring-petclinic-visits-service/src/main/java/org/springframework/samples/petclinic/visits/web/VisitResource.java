@@ -51,8 +51,8 @@ class VisitResource {
     @PostMapping("owners/*/pets/{petId}/visits")
     @ResponseStatus(HttpStatus.CREATED)
     Visit create(
-        @Valid @RequestBody Visit visit,
-        @PathVariable("petId") int petId) {
+            @Valid @RequestBody Visit visit,
+            @PathVariable("petId") int petId) {
 
         visit.setPetId(petId);
         log.info("Saving visit {}", visit);
@@ -72,6 +72,7 @@ class VisitResource {
 
     @Value
     static class Visits {
+
         private final List<Visit> items;
     }
 }

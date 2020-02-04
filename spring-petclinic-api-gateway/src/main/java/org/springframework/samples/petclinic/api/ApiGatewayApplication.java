@@ -15,13 +15,15 @@
  */
 package org.springframework.samples.petclinic.api;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cloud.client.circuitbreaker.EnableCircuitBreaker;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.cloud.netflix.zuul.EnableZuulProxy;
 import org.springframework.context.annotation.Bean;
+import org.springframework.samples.petclinic.opencensus.OpenCensusService;
 import org.springframework.web.client.RestTemplate;
 
 /**
@@ -29,11 +31,11 @@ import org.springframework.web.client.RestTemplate;
  */
 @EnableZuulProxy
 @EnableDiscoveryClient
-@EnableCircuitBreaker
 @SpringBootApplication
 public class ApiGatewayApplication {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws UnknownHostException {
+        OpenCensusService.getInstance().registerContext("PetClinic", "api-gateway", InetAddress.getLocalHost().getHostName());
         SpringApplication.run(ApiGatewayApplication.class, args);
     }
 

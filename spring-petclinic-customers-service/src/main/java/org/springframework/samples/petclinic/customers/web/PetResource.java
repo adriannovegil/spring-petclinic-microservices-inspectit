@@ -40,7 +40,6 @@ class PetResource {
     private final PetRepository petRepository;
     private final OwnerRepository ownerRepository;
 
-
     @GetMapping("/petTypes")
     public List<PetType> getPetTypes() {
         return petRepository.findPetTypes();
@@ -49,12 +48,12 @@ class PetResource {
     @PostMapping("/owners/{ownerId}/pets")
     @ResponseStatus(HttpStatus.CREATED)
     public Pet processCreationForm(
-        @RequestBody PetRequest petRequest,
-        @PathVariable("ownerId") int ownerId) {
+            @RequestBody PetRequest petRequest,
+            @PathVariable("ownerId") int ownerId) {
 
         final Pet pet = new Pet();
         final Optional<Owner> optionalOwner = ownerRepository.findById(ownerId);
-        Owner owner = optionalOwner.orElseThrow(() -> new ResourceNotFoundException("Owner "+ownerId+" not found"));
+        Owner owner = optionalOwner.orElseThrow(() -> new ResourceNotFoundException("Owner " + ownerId + " not found"));
         owner.addPet(pet);
 
         return save(pet, petRequest);
@@ -74,7 +73,7 @@ class PetResource {
         pet.setBirthDate(petRequest.getBirthDate());
 
         petRepository.findPetTypeById(petRequest.getTypeId())
-            .ifPresent(pet::setType);
+                .ifPresent(pet::setType);
 
         log.info("Saving pet {}", pet);
         return petRepository.save(pet);
@@ -85,11 +84,10 @@ class PetResource {
         return new PetDetails(findPetById(petId));
     }
 
-
     private Pet findPetById(int petId) {
         Optional<Pet> pet = petRepository.findById(petId);
         if (!pet.isPresent()) {
-            throw new ResourceNotFoundException("Pet "+petId+" not found");
+            throw new ResourceNotFoundException("Pet " + petId + " not found");
         }
         return pet.get();
     }

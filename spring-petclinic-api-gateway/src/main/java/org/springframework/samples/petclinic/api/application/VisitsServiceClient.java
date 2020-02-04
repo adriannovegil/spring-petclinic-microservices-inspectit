@@ -27,7 +27,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.joining;
 import static org.springframework.web.util.UriComponentsBuilder.fromHttpUrl;
@@ -44,12 +43,12 @@ public class VisitsServiceClient {
     @HystrixCommand(fallbackMethod = "emptyVisitsForPets")
     public Map<Integer, List<VisitDetails>> getVisitsForPets(final List<Integer> petIds) {
         UriComponentsBuilder builder = fromHttpUrl("http://visits-service/pets/visits")
-            .queryParam("petId", joinIds(petIds));
+                .queryParam("petId", joinIds(petIds));
 
         return loadBalancedRestTemplate.getForObject(builder.toUriString(), Visits.class)
-            .getItems()
-            .stream()
-            .collect(groupingBy(VisitDetails::getPetId));
+                .getItems()
+                .stream()
+                .collect(groupingBy(VisitDetails::getPetId));
     }
 
     private String joinIds(List<Integer> petIds) {

@@ -1,6 +1,6 @@
 # Distributed version of the Spring PetClinic Sample Application built with Spring Cloud
 
-__OpenAPM Demo__
+__InspectIT Demo__
 
 ## Starting services locally without Docker
 

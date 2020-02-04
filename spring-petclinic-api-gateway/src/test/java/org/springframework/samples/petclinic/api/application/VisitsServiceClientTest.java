@@ -44,11 +44,11 @@ class VisitsServiceClientTest {
     @Test
     public void getVisitsForPets_withAvailableVisitsService() {
         mockServer.expect(requestTo("http://visits-service/pets/visits?petId=1"))
-            .andRespond(withSuccess("{\"items\":[{\"id\":5,\"date\":\"2018-11-15\",\"description\":\"test visit\",\"petId\":1}]}", MediaType.APPLICATION_JSON));
+                .andRespond(withSuccess("{\"items\":[{\"id\":5,\"date\":\"2018-11-15\",\"description\":\"test visit\",\"petId\":1}]}", MediaType.APPLICATION_JSON));
 
         Map<Integer, List<VisitDetails>> visits = visitsServiceClient.getVisitsForPets(Collections.singletonList(1));
 
-        assertVisitDescriptionEquals(visits, PET_ID,"test visit");
+        assertVisitDescriptionEquals(visits, PET_ID, "test visit");
     }
 
     /**
@@ -58,7 +58,7 @@ class VisitsServiceClientTest {
     public void getVisitsForPets_withServerError() {
 
         mockServer.expect(requestTo("http://visits-service/pets/visits?petId=1"))
-            .andRespond(withServerError());
+                .andRespond(withServerError());
 
         Map<Integer, List<VisitDetails>> visits = visitsServiceClient.getVisitsForPets(Collections.singletonList(1));
 

@@ -42,6 +42,7 @@ import org.springframework.core.style.ToStringCreator;
 @Entity
 @Table(name = "pets")
 public class Pet {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
@@ -105,13 +106,13 @@ public class Pet {
     @Override
     public String toString() {
         return new ToStringCreator(this)
-            .append("id", this.getId())
-            .append("name", this.getName())
-            .append("birthDate", this.getBirthDate())
-            .append("type", this.getType().getName())
-            .append("ownerFirstname", this.getOwner().getFirstName())
-            .append("ownerLastname", this.getOwner().getLastName())
-            .toString();
+                .append("id", this.getId())
+                .append("name", this.getName())
+                .append("birthDate", this.getBirthDate())
+                .append("type", this.getType().getName())
+                .append("ownerFirstname", this.getOwner().getFirstName())
+                .append("ownerLastname", this.getOwner().getLastName())
+                .toString();
     }
 
 }

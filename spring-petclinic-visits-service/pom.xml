@@ -3,16 +3,16 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+    <parent>
+        <groupId>org.springframework.samples</groupId>
+        <artifactId>spring-petclinic-microservices-inspectit</artifactId>
+        <version>2.1.4</version>
+    </parent>
+
     <groupId>org.springframework.samples.petclinic.visits</groupId>
     <artifactId>spring-petclinic-visits-service</artifactId>
     <packaging>jar</packaging>
     <description>Spring PetClinic Visits Service</description>
-
-    <parent>
-        <groupId>org.springframework.samples</groupId>
-        <artifactId>spring-petclinic-microservices</artifactId>
-        <version>2.1.4</version>
-    </parent>
 
     <properties>
         <docker.exposed.port>8081</docker.exposed.port>
@@ -20,6 +20,7 @@
     </properties>
 
     <dependencies>
+        
         <!-- Spring Boot -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -48,14 +49,6 @@
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-sleuth</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-sleuth-zipkin</artifactId>
-        </dependency>
 
         <!-- Third parties -->
         <dependency>
@@ -76,9 +69,11 @@
             <artifactId>mysql-connector-java</artifactId>
             <scope>runtime</scope>
         </dependency>
+
+        <!-- OpenCensus -->
         <dependency>
-            <groupId>io.micrometer</groupId>
-            <artifactId>micrometer-registry-prometheus</artifactId>
+            <artifactId>spring-petclinic-opencensus-server</artifactId>
+            <groupId>org.springframework.samples.petclinic.opencensus</groupId>
         </dependency>
 
         <!-- Testing -->

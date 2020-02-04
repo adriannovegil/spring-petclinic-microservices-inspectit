@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -16,14 +16,15 @@
     <packaging>pom</packaging>
 
     <modules>
+        <module>spring-petclinic-opencensus-server</module>
         <module>spring-petclinic-admin-server</module>
+        <module>spring-petclinic-api-gateway</module>
+        <module>spring-petclinic-config-server</module>
         <module>spring-petclinic-customers-service</module>
+        <module>spring-petclinic-discovery-server</module>
+        <module>spring-petclinic-hystrix-dashboard</module>
         <module>spring-petclinic-vets-service</module>
         <module>spring-petclinic-visits-service</module>
-        <module>spring-petclinic-config-server</module>
-        <module>spring-petclinic-discovery-server</module>
-        <module>spring-petclinic-api-gateway</module>
-        <module>spring-petclinic-hystrix-dashboard</module>
     </modules>
 
     <properties>
@@ -40,6 +41,8 @@
         <docker.image.dockerfile.dir>${basedir}</docker.image.dockerfile.dir>
         <docker.image.dockerize.version>v0.6.1</docker.image.dockerize.version>
         <docker.plugin.version>1.2.0</docker.plugin.version>
+        
+        <opencensus.version>0.16.1</opencensus.version>
     </properties>
 
     <dependencyManagement>
@@ -51,6 +54,13 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+            
+            <dependency>
+                <groupId>org.springframework.samples.petclinic.opencensus</groupId>                
+                <artifactId>spring-petclinic-opencensus-server</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-starter-test</artifactId>
