@@ -1,9 +1,9 @@
 version: '3.3'
 services:
 
-  # Agent
+  # InspoectIT
   # ============================================================================
-  # InspoectIT agent
+  # Agent
   agent:
     build: ./docker/agent
     image: inspectit/inspectit-agent
@@ -185,6 +185,7 @@ services:
       - agent-vol:/agent
     ports:
      - 9090:9090
+     - 9097:9097
 
   # Circuit breaker
   # ============================================================================
@@ -210,6 +211,7 @@ services:
       - agent-vol:/agent
     ports:
      - 7979:7979
+     - 9098:9098
 
   # Metrics
   # ============================================================================
@@ -238,14 +240,15 @@ services:
     build: ./docker/grafana-server
     image: inspectit/inspectit-grafana-server
     container_name: inspectit-grafana-server
-    depends_on:
-      - influxdb-server
-    ports:
-      - 3000:3000
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=demo
       - GF_PATHS_PROVISIONING=/usr/share/grafana/custom/
-
+    volumes:
+      - ./docker/grafana-server/provisioning:/usr/share/grafana/custom/
+    depends_on:
+      - influxdb-server
+    ports:
+      - 3000:3000    
 
   # Trazing
   # ============================================================================

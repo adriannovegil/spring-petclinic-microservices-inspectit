@@ -1,12 +1,20 @@
-#extract the prepared statement SQL string from the HSQLDB jdbc driver
 inspectit:
-      
   instrumentation:  
-    data:
-      sql:
-        is-tag: false
   
+    scopes:
+      hsqldb_prepared_statement_execute:
+        type:
+          name: org.hsqldb.jdbc.JDBCPreparedStatement
+        methods:
+          - name: execute
+            matcher-mode: STARTS_WITH
+            
+    data:
+      db_name: {down-propagation: NONE, is-tag: false}
+      sql: {down-propagation: NONE, is-tag: false}
+    
     actions:
+      # Extracts the SQL from a PreparedStatement for HSQLDB
       hsqldb_prepared_statement_get_sql:
         imports:
           - org.hsqldb.jdbc
@@ -19,7 +27,20 @@ inspectit:
           sqlField.setAccessible(true);
           return sqlField.get(_this); 
           
-    rules:
+    rules:    
+      # We also trace JDBC calls including their target database
+      servicegraph_record_jdbc_calls:
+        tracing:
+          start-span: true
+          attributes:
+            database: db_name
+          start-span-conditions:
+            only-if-true: servicegraph_is_entry
+        entry:
+          db_name:
+            action: get_jdbc_statement_connection_name
+            
+      # Extract the sql and add it to the trace
       hsqldb_get_prep_statement_sql:
         scopes:
           hsqldb_prepared_statement_execute: true
@@ -29,11 +50,3 @@ inspectit:
         entry:
           sql:
             action: hsqldb_prepared_statement_get_sql
-    
-    scopes:
-      hsqldb_prepared_statement_execute:
-        type:
-          name: org.hsqldb.jdbc.JDBCPreparedStatement
-        methods:
-          - name: execute
-            matcher-mode: STARTS_WITH
