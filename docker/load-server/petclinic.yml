@@ -1,11 +1,12 @@
 config:
   target: 'http://api-gateway:8080'
   phases:
-    - duration: 5
-      arrivalCount: 5
+    - duration: 600
+      arrivalCount: 200
 scenarios:
-  - flow:
-    - loop:
+  - name: "View owner"
+    weight: 4
+    flow:
       - get:
           url: "/"
       - think: 1
@@ -13,7 +14,50 @@ scenarios:
           url: "/api/customer/owners"
           capture:
             json: "$[*].id"
-            as: "id"
+            as: "ownerId"
       - think: 1
       - get:
-          url: "/api/gateway/owners/{{ id }}"
+          url: "/api/gateway/owners/{{ ownerId }}"
+      - think: 1
+      - get:
+          url: "/api/vet/vets"
+  - name: "Edit pet type"
+    weight: 2
+    flow:
+      - get:
+          url: "/"
+      - think: 1
+      - get:
+          url: "/api/customer/owners"
+          capture:
+            json: "$[*].id"
+            as: "ownerId"
+      - think: 1
+      - get:
+          url: "/api/gateway/owners/{{ ownerId }}"
+          capture:
+            json: "$.pets[*].id"
+            as: "petId"
+      - think: 1
+      - get:
+          url: "/api/customer/owners/{{ ownerId }}/pets/{{ petId }}"
+          capture:
+            - json: "$.name"
+              as: "petName"
+            - json: "$.birthDate"
+              as: "petBirthDate"
+      - get:
+          url: "/api/customer/petTypes"
+          capture:
+            json: "$[*].id"
+            as: "petTypeId"
+      - think: 1
+      - put:
+          url: "/api/customer/owners/{{ ownerId }}/pets/{{ petId }}"
+          json:
+            birthDate: "{{ petBirthDate }}"
+            id: "{{ petId }}"
+            name: "{{ petName }}"
+            typeId: "{{ petTypeId }}"
+      - get:
+          url: "/api/customer/owners"
