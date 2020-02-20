@@ -4,7 +4,7 @@ __InspectIT Demo__
 
 ## Starting services locally without Docker
 
-Every microservice is a Spring Boot application and can be started locally using IDE or `../mvnw spring-boot:run` command.
+Every microservice is a Spring Boot application and can be started locally using IDE or `./mvnw spring-boot:run` command.
 
 Please note that supporting services (__Config and Discovery Server__) must be started before any other application (Customers, Vets, Visits and API).
 
@@ -23,21 +23,24 @@ If everything goes well, you can access the following services at given location
  * Config Server - http://localhost:8888
  * Admin Server (Spring Boot Admin) - http://localhost:9090
 
-### Monitoring
+### Load
 
-  * Grafana Dashboards - http://localhost:3000
-  * Prometheus - http://localhost:9091
-  * Hystrix Dashboard for Circuit Breaker pattern - http://localhost:7979 - On the home page is a form where you can enter
-  the URL for an event stream to monitor, for example the `api-gateway` service running locally: `http://localhost:8080/actuator/hystrix.stream`
-  or running into docker: `http://api-gateway:8080/actuator/hystrix.stream`
+ * Gatling load generator for the Pet-Clinic. Load generation starts with a delay of 5 minutes! (To ensure that all services are up and running properly.)
+
+### Microservices management
+
+ * Hystrix Dashboard for Circuit Breaker pattern - http://localhost:7979 - On the home page is a form where you can enter
+the URL for an event stream to monitor, for example the `api-gateway` service running locally: `http://localhost:8080/actuator/hystrix.stream`
+or running into docker: `http://api-gateway:8080/actuator/hystrix.stream`
+
+### Metrics
+
+ * Grafana Dashboards - http://localhost:3000
+ * Prometheus - http://localhost:9091
 
 ### Trazing
 
  * Tracing Server (Zipkin) - http://localhost:9411/zipkin/ (we use [openzipkin](https://github.com/openzipkin/zipkin/tree/master/zipkin-server))
-
-### Load
-
- * Gatling load generator for the Pet-Clinic. Load generation starts with a delay of 5 minutes! (To ensure that all services are up and running properly.)
 
 ## Starting services locally with docker-compose
 
@@ -89,3 +92,7 @@ ENV SPRING_PROFILES_ACTIVE docker,mysql
 ```
 In the `mysql section` of the `application.yml` from the [Configuration repository], you have to change
 the host and port of your MySQL JDBC connection string.
+
+## References
+
+ * https://github.com/spring-petclinic/spring-petclinic-microservices
