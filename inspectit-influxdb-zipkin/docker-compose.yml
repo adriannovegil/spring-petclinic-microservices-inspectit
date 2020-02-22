@@ -1,0 +1,313 @@
+version: '3.3'
+services:
+
+  # InspectIT
+  # ============================================================================
+  # Agent
+  agent:
+    build: ./agent
+    image: inspectit/inspectit-agent
+    container_name: inspectit-agent
+    volumes:
+      - agent-vol:/agent
+
+  # Config server
+  ocelot-config-server:
+    image: inspectit/inspectit-ocelot-configurationserver:${INSPECTIT_OCELOT_VERSION}
+    container_name: ocelot-config-server
+    environment:
+      - INSPECTIT_CONFIG_SERVER_WORKING_DIRECTORY=/configuration-server
+      - INSPECTIT_CONFIG_SERVER_DEFAULT_USER_PASSWORD=demo
+    volumes:
+      - ./configuration-server:/configuration-server
+    ports:
+      - 8090:8090
+
+  # Infrastructure
+  # ============================================================================
+  # Config server
+  config-server:
+    image: inspectit/spring-petclinic-config-server
+    container_name: inspectit-config-server
+    environment:
+      - INSPECTIT_SERVICE_NAME=config-server
+      - INSPECTIT_CONFIG_HTTP_URL=http://ocelot-config-server:8090/api/v1/agent/configuration
+      - INSPECTIT_EXPORTERS_METRICS_PROMETHEUS_ENABLED=false
+      - INSPECTIT_EXPORTERS_METRICS_INFLUX_URL=http://influxdb-server:8086
+      - INSPECTIT_EXPORTERS_TRACING_ZIPKIN_URL=http://zipkin-server:9411/api/v2/spans
+    depends_on:
+      - agent
+      - ocelot-config-server
+    entrypoint: ["sh", "-c","
+      ./dockerize -wait=tcp://ocelot-config-server:8888 \
+                  -wait=tcp://influxdb-server:8086 \
+                  -wait=tcp://zipkin-server:9411  \
+                  -timeout=300s -- &&
+      java -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -Djava.security.egd=file:/dev/./urandom
+      -javaagent:/agent/inspectit-ocelot-agent.jar
+      -jar /app.jar"]
+    volumes:
+      - agent-vol:/agent
+    ports:
+      - 8888:8888
+
+  # Discovery service
+  discovery-server:
+    image: inspectit/spring-petclinic-discovery-server
+    container_name: inspectit-discovery-server
+    environment:
+      - INSPECTIT_SERVICE_NAME=discovery-server
+      - INSPECTIT_CONFIG_HTTP_URL=http://ocelot-config-server:8090/api/v1/agent/configuration
+      - INSPECTIT_EXPORTERS_METRICS_PROMETHEUS_ENABLED=false
+      - INSPECTIT_EXPORTERS_METRICS_INFLUX_URL=http://influxdb-server:8086
+      - INSPECTIT_EXPORTERS_TRACING_ZIPKIN_URL=http://zipkin-server:9411/api/v2/spans
+    depends_on:
+      - config-server
+      - ocelot-config-server
+      - agent
+    entrypoint: ["sh", "-c","
+      ./dockerize -wait=tcp://config-server:8888 \
+                  -wait=tcp://ocelot-config-server:8888 \
+                  -wait=tcp://influxdb-server:8086 \
+                  -wait=tcp://zipkin-server:9411  \
+                  -timeout=300s -- &&
+      java -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -Djava.security.egd=file:/dev/./urandom
+      -javaagent:/agent/inspectit-ocelot-agent.jar
+      -jar /app.jar"]
+    volumes:
+      - agent-vol:/agent
+    ports:
+      - 8761:8761
+
+  # Services
+  # ============================================================================
+  # Customers service
+  customers-service:
+    image: inspectit/spring-petclinic-customers-service
+    container_name: inspectit-customers-service
+    environment:
+      - INSPECTIT_SERVICE_NAME=customers-service
+      - INSPECTIT_CONFIG_HTTP_URL=http://ocelot-config-server:8090/api/v1/agent/configuration
+      - INSPECTIT_EXPORTERS_METRICS_PROMETHEUS_ENABLED=false
+      - INSPECTIT_EXPORTERS_METRICS_INFLUX_URL=http://influxdb-server:8086
+      - INSPECTIT_EXPORTERS_TRACING_ZIPKIN_URL=http://zipkin-server:9411/api/v2/spans
+    depends_on:
+      - config-server
+      - ocelot-config-server
+      - discovery-server
+      - agent
+    entrypoint: ["sh", "-c","
+      ./dockerize -wait=tcp://discovery-server:8761 \
+                  -wait=tcp://ocelot-config-server:8888 \
+                  -wait=tcp://influxdb-server:8086 \
+                  -wait=tcp://zipkin-server:9411  \
+                  -timeout=300s -- &&
+      java -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -Djava.security.egd=file:/dev/./urandom
+      -javaagent:/agent/inspectit-ocelot-agent.jar
+      -jar /app.jar"]
+    volumes:
+      - agent-vol:/agent
+    ports:
+      - 8081:8081
+
+  # Visits service
+  visits-service:
+    image: inspectit/spring-petclinic-visits-service
+    container_name: inspectit-visits-service
+    environment:
+      - INSPECTIT_SERVICE_NAME=visits-service
+      - INSPECTIT_CONFIG_HTTP_URL=http://ocelot-config-server:8090/api/v1/agent/configuration
+      - INSPECTIT_EXPORTERS_METRICS_PROMETHEUS_ENABLED=false
+      - INSPECTIT_EXPORTERS_METRICS_INFLUX_URL=http://influxdb-server:8086
+      - INSPECTIT_EXPORTERS_TRACING_ZIPKIN_URL=http://zipkin-server:9411/api/v2/spans
+    depends_on:
+      - config-server
+      - ocelot-config-server
+      - discovery-server
+      - agent
+    entrypoint: ["sh", "-c","
+      ./dockerize -wait=tcp://discovery-server:8761 \
+                  -wait=tcp://ocelot-config-server:8888 \
+                  -wait=tcp://influxdb-server:8086 \
+                  -wait=tcp://zipkin-server:9411  \
+                  -timeout=300s -- &&
+      java -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -Djava.security.egd=file:/dev/./urandom
+      -javaagent:/agent/inspectit-ocelot-agent.jar
+      -jar /app.jar"]
+    volumes:
+      - agent-vol:/agent
+    ports:
+      - 8082:8082
+
+  #Vets service
+  vets-service:
+    image: inspectit/spring-petclinic-vets-service
+    container_name: inspectit-vets-service
+    environment:
+      - INSPECTIT_SERVICE_NAME=vets-service
+      - INSPECTIT_CONFIG_HTTP_URL=http://ocelot-config-server:8090/api/v1/agent/configuration
+      - INSPECTIT_EXPORTERS_METRICS_PROMETHEUS_ENABLED=false
+      - INSPECTIT_EXPORTERS_METRICS_INFLUX_URL=http://influxdb-server:8086
+      - INSPECTIT_EXPORTERS_TRACING_ZIPKIN_URL=http://zipkin-server:9411/api/v2/spans
+    depends_on:
+      - config-server
+      - ocelot-config-server
+      - discovery-server
+      - agent
+    entrypoint: ["sh", "-c","
+      ./dockerize -wait=tcp://discovery-server:8761 \
+                  -wait=tcp://ocelot-config-server:8888 \
+                  -wait=tcp://influxdb-server:8086 \
+                  -wait=tcp://zipkin-server:9411  \
+                  -timeout=300s -- &&
+      java -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -Djava.security.egd=file:/dev/./urandom
+      -javaagent:/agent/inspectit-ocelot-agent.jar
+      -jar /app.jar"]
+    volumes:
+      - agent-vol:/agent
+    ports:
+      - 8083:8083
+
+  # API gateway
+  api-gateway:
+    image: inspectit/spring-petclinic-api-gateway
+    container_name: inspectit-api-gateway
+    environment:
+      - INSPECTIT_SERVICE_NAME=api-gateway
+      - INSPECTIT_CONFIG_HTTP_URL=http://ocelot-config-server:8090/api/v1/agent/configuration
+      - INSPECTIT_EXPORTERS_METRICS_PROMETHEUS_ENABLED=false
+      - INSPECTIT_EXPORTERS_METRICS_INFLUX_URL=http://influxdb-server:8086
+      - INSPECTIT_EXPORTERS_TRACING_ZIPKIN_URL=http://zipkin-server:9411/api/v2/spans
+    depends_on:
+      - config-server
+      - ocelot-config-server
+      - discovery-server
+      - agent
+    entrypoint: ["sh", "-c","
+      ./dockerize -wait=tcp://discovery-server:8761 \
+                  -wait=tcp://ocelot-config-server:8888 \
+                  -wait=tcp://influxdb-server:8086 \
+                  -wait=tcp://zipkin-server:9411  \
+                  -timeout=300s -- &&
+      java -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -Djava.security.egd=file:/dev/./urandom
+      -javaagent:/agent/inspectit-ocelot-agent.jar
+      -jar /app.jar"]
+    volumes:
+      - agent-vol:/agent
+    ports:
+      - 8080:8080
+
+  # Admin Server
+  # ============================================================================
+  admin-server:
+    image: inspectit/spring-petclinic-admin-server
+    container_name: inspectit-admin-server
+    environment:
+      - INSPECTIT_SERVICE_NAME=admin-server
+      - INSPECTIT_CONFIG_HTTP_URL=http://ocelot-config-server:8090/api/v1/agent/configuration
+      - INSPECTIT_EXPORTERS_METRICS_PROMETHEUS_ENABLED=false
+      - INSPECTIT_EXPORTERS_METRICS_INFLUX_URL=http://influxdb-server:8086
+      - INSPECTIT_EXPORTERS_TRACING_ZIPKIN_URL=http://zipkin-server:9411/api/v2/spans
+    depends_on:
+     - config-server
+     - ocelot-config-server
+     - discovery-server
+     - agent
+    entrypoint: ["sh", "-c","
+      ./dockerize -wait=tcp://config-server:8888 \
+                  -wait=tcp://ocelot-config-server:8888 \
+                  -wait=tcp://influxdb-server:8086 \
+                  -wait=tcp://zipkin-server:9411  \
+                  -timeout=300s -- &&
+      java -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -Djava.security.egd=file:/dev/./urandom
+      -javaagent:/agent/inspectit-ocelot-agent.jar
+      -jar /app.jar"]
+    volumes:
+      - agent-vol:/agent
+    ports:
+     - 9090:9090
+
+  # Circuit breaker
+  # ============================================================================
+  hystrix-dashboard:
+    image: inspectit/spring-petclinic-hystrix-dashboard
+    container_name: inspectit-hystrix-dashboard
+    environment:
+      - INSPECTIT_SERVICE_NAME=hystrix-dashboard
+      - INSPECTIT_CONFIG_HTTP_URL=http://ocelot-config-server:8090/api/v1/agent/configuration
+      - INSPECTIT_EXPORTERS_METRICS_PROMETHEUS_ENABLED=false
+      - INSPECTIT_EXPORTERS_METRICS_INFLUX_URL=http://influxdb-server:8086
+      - INSPECTIT_EXPORTERS_TRACING_ZIPKIN_URL=http://zipkin-server:9411/api/v2/spans
+    depends_on:
+     - config-server
+     - ocelot-config-server
+     - discovery-server
+     - agent
+    entrypoint: ["sh", "-c","
+      ./dockerize -wait=tcp://config-server:8888 \
+                  -wait=tcp://ocelot-config-server:8888 \
+                  -wait=tcp://influxdb-server:8086 \
+                  -wait=tcp://zipkin-server:9411  \
+                  -timeout=300s -- &&
+      java -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -Djava.security.egd=file:/dev/./urandom
+      -javaagent:/agent/inspectit-ocelot-agent.jar
+      -jar /app.jar"]
+    volumes:
+      - agent-vol:/agent
+    ports:
+     - 7979:7979
+
+  # Metrics
+  # ============================================================================
+  # InfluxDB
+  influxdb-server:
+    image: influxdb:1.7.1
+    container_name: inspectit-influxdb-server
+    environment:
+      - INFLUXDB_HTTP_FLUX_ENABLED=true
+      - INFLUXDB_HTTP_LOG_ENABLED=false
+      - INFLUXDB_DATA_QUERY_LOG_ENABLED=false
+    volumes:
+      - ./influxdb-server:/docker-entrypoint-initdb.d
+    ports:
+      - 8086:8086
+
+  # Grafana
+  grafana-server:
+    build: ./grafana-server
+    image: inspectit/inspectit-grafana-server
+    container_name: inspectit-grafana-server
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=demo
+      - GF_PATHS_PROVISIONING=/usr/share/grafana/custom/
+    volumes:
+      - ./grafana-server/provisioning:/usr/share/grafana/custom/
+    depends_on:
+      - influxdb-server
+    ports:
+      - 3000:3000
+
+  # Trazing
+  # ============================================================================
+  # Zipkin
+  zipkin-server:
+    image: openzipkin/zipkin
+    container_name: inspectit-zipkin-server
+    ports:
+      - 9411:9411
+
+  # Load
+  # ============================================================================
+  # Load server
+  load-server:
+    build: ./load-server
+    image: inspectit/load-server
+    container_name: inspectit-load-server
+    depends_on:
+      - api-gateway
+      - customers-service
+      - visits-service
+      - vets-service
+
+volumes:
+  agent-vol:
