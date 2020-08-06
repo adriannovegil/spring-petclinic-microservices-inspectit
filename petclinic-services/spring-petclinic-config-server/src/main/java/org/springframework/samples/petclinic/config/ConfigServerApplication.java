@@ -15,12 +15,9 @@
  */
 package org.springframework.samples.petclinic.config;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.config.server.EnableConfigServer;
-import org.springframework.samples.petclinic.opencensus.OpenCensusService;
 
 /**
  * @author Maciej Szarlinski
@@ -29,8 +26,7 @@ import org.springframework.samples.petclinic.opencensus.OpenCensusService;
 @SpringBootApplication
 public class ConfigServerApplication {
 
-    public static void main(String[] args) throws UnknownHostException {
-        OpenCensusService.getInstance().registerContext("PetClinic", "config-server", InetAddress.getLocalHost().getHostName());
+    public static void main(String[] args) {
         SpringApplication.run(ConfigServerApplication.class, args);
     }
 }

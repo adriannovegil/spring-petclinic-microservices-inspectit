@@ -1,7 +1,5 @@
 # Distributed version of the Spring PetClinic Sample Application built with Spring Cloud
 
-__InspectIT Demo__
-
 *Based on the original [Spring Petclinic microservices](https://github.com/spring-petclinic/spring-petclinic-microservices) repository.*
 
 ## Starting services locally without Docker
@@ -10,12 +8,23 @@ Every microservice is a Spring Boot application and can be started locally using
 
 Please note that supporting services (__Config and Discovery Server__) must be started before any other application (Customers, Vets, Visits and API).
 
-Startup of __Tracing server__, __Admin server__, __Grafana__ and __Prometheus__ is optional.
+Startup of __Admin server__ is optional.
 
-## Build service images
+## Starting services locally with docker-compose
 
-In order to start entire infrastructure using Docker, you have to build images by executing `./mvnw clean install -PbuildDocker`
+In order to start entire infrastructure using Docker, you have to build images by executing
+
+```
+$ ./mvnw clean install -PbuildDocker
+```
+
 from a project root.
+
+Once images are ready, you can start them with a single command
+
+```
+$ docker-compose up
+```
 
 After starting services it takes a while for `API Gateway` to be in sync with service registry, so don't be scared of initial Zuul timeouts.
 
@@ -42,17 +51,18 @@ or download and install the MySQL database (e.g., MySQL Community Server 5.7 GA)
 
 ### Use the Spring 'mysql' profile
 
-To use a MySQL database, you have to start 3 microservices (`visits-service`, `customers-service` and `vets-services`)
-with the `mysql` Spring profile. Add the `--spring.profiles.active=mysql` as programm argument.
+To use a MySQL database, you have to start 3 microservices (`visits-service`, `customers-service` and `vets-services`) with the `mysql` Spring profile. Add the `--spring.profiles.active=mysql` as programm argument.
 
 By default, at startup, database schema will be created and data will be populated.
 You may also manualy create the PetClinic database and data by executing the `"db/mysql/{schema,data}.sql"` scripts of each 3 microservices.
 In the `application.yml` of the [Configuration repository], set the `initialization-mode` to `never`.
 
 If you are running the microservices with Docker, you have to add the `mysql` profile into the (Dockerfile)[docker/Dockerfile]:
+
 ```
 ENV SPRING_PROFILES_ACTIVE docker,mysql
 ```
+
 In the `mysql section` of the `application.yml` from the [Configuration repository], you have to change
 the host and port of your MySQL JDBC connection string.
 
@@ -60,23 +70,23 @@ the host and port of your MySQL JDBC connection string.
 
 If everything goes well, you can access the following services at given location:
 
-### Business services
+__Business services__
 
   * AngularJS frontend (API Gateway) - http://localhost:8080
   * Customers, Vets and Visits Services - random port, check Eureka Dashboard
 
-### Infrastructure
+__Infrastructure__
 
  * Discovery Server - http://localhost:8761
  * Config Server - http://localhost:8888
  * Admin Server (Spring Boot Admin) - http://localhost:9090
 
-### Microservices management
-
-  * Hystrix Dashboard for Circuit Breaker pattern - http://localhost:7979 - On the home page is a form where you can enter
- the URL for an event stream to monitor, for example the `api-gateway` service running locally: `http://localhost:8080/actuator/hystrix.stream`
- or running into docker: `http://api-gateway:8080/actuator/hystrix.stream`
-
-### Load
+__Load__
 
  * [Artillery](https://artillery.io/) load generator for the Pet-Clinic. (To ensure that all services are up and running properly.)
+
+## References
+
+ * https://github.com/spring-petclinic/spring-petclinic-microservices
+ * https://github.com/spring-petclinic/spring-petclinic-rest
+ * https://github.com/gantsign/spring-petclinic-openapi/tree/master/src/main/java/org/springframework/samples/petclinic/web/api

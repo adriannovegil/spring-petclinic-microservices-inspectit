@@ -4,19 +4,19 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <parent>
-        <groupId>org.springframework.samples</groupId>
-        <artifactId>spring-petclinic-microservices-inspectit</artifactId>
-        <version>2.1.4</version>
-    </parent>
-
     <groupId>org.springframework.samples.petclinic.admin</groupId>
     <artifactId>spring-petclinic-admin-server</artifactId>
     <packaging>jar</packaging>
     <description>Spring Boot Admin server</description>
 
+    <parent>
+        <groupId>org.springframework.samples</groupId>
+        <artifactId>spring-petclinic-microservices</artifactId>
+        <version>2.3.2</version>
+    </parent>
+
     <properties>
-        <spring-boot-admin.version>2.1.2</spring-boot-admin.version>
+        <spring-boot-admin.version>2.2.2</spring-boot-admin.version>
         <docker.image.exposed.port>9090</docker.image.exposed.port>
         <docker.image.dockerfile.dir>${basedir}/../docker</docker.image.dockerfile.dir>
     </properties>
@@ -48,18 +48,6 @@
             <version>${spring-boot-admin.version}</version>
         </dependency>
 
-        <!-- OpenCensus -->
-        <dependency>
-            <artifactId>spring-petclinic-opencensus-server</artifactId>
-            <groupId>org.springframework.samples.petclinic.opencensus</groupId>
-        </dependency>
-
-        <!-- Third-party librairies -->
-        <dependency>
-            <groupId>org.jolokia</groupId>
-            <artifactId>jolokia-core</artifactId>
-        </dependency>
-
     </dependencies>
 
     <profiles>
@@ -76,4 +64,5 @@
             </build>
         </profile>
     </profiles>
+
 </project>

@@ -46,7 +46,7 @@ public class OwnerDetails {
     @JsonIgnore
     public List<Integer> getPetIds() {
         return pets.stream()
-                .map(PetDetails::getId)
-                .collect(toList());
+            .map(PetDetails::getId)
+            .collect(toList());
     }
 }

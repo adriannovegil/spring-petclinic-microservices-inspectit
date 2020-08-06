@@ -3,16 +3,16 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <parent>
-        <groupId>org.springframework.samples</groupId>
-        <artifactId>spring-petclinic-microservices-inspectit</artifactId>
-        <version>2.1.4</version>
-    </parent>
-
     <groupId>org.springframework.samples.petclinic.config</groupId>
     <artifactId>spring-petclinic-config-server</artifactId>
     <packaging>jar</packaging>
     <description>Spring PetClinic Config Server</description>
+
+    <parent>
+        <groupId>org.springframework.samples</groupId>
+        <artifactId>spring-petclinic-microservices</artifactId>
+        <version>2.3.2</version>
+    </parent>
 
     <properties>
         <docker.image.exposed.port>8888</docker.image.exposed.port>
@@ -31,18 +31,6 @@
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-config-server</artifactId>
-        </dependency>
-
-        <!-- Third-party librairies -->
-        <dependency>
-            <groupId>org.jolokia</groupId>
-            <artifactId>jolokia-core</artifactId>
-        </dependency>
-
-        <!-- OpenCensus -->
-        <dependency>
-            <artifactId>spring-petclinic-opencensus-server</artifactId>
-            <groupId>org.springframework.samples.petclinic.opencensus</groupId>
         </dependency>
 
         <!-- Testing -->

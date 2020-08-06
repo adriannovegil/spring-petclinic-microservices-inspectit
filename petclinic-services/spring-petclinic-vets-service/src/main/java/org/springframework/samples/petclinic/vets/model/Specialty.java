@@ -30,7 +30,6 @@ import javax.persistence.Table;
 @Entity
 @Table(name = "specialties")
 public class Specialty {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;

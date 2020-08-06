@@ -23,12 +23,12 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 /**
- * @author Juergen Hoeller Can be Cat, Dog, Hamster...
+ * @author Juergen Hoeller
+ * Can be Cat, Dog, Hamster...
  */
 @Entity
 @Table(name = "types")
 public class PetType {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;

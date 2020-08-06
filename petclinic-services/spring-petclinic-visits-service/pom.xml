@@ -3,16 +3,16 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <parent>
-        <groupId>org.springframework.samples</groupId>
-        <artifactId>spring-petclinic-microservices-inspectit</artifactId>
-        <version>2.1.4</version>
-    </parent>
-
     <groupId>org.springframework.samples.petclinic.visits</groupId>
     <artifactId>spring-petclinic-visits-service</artifactId>
     <packaging>jar</packaging>
     <description>Spring PetClinic Visits Service</description>
+
+    <parent>
+        <groupId>org.springframework.samples</groupId>
+        <artifactId>spring-petclinic-microservices</artifactId>
+        <version>2.3.2</version>
+    </parent>
 
     <properties>
         <docker.exposed.port>8081</docker.exposed.port>
@@ -20,7 +20,6 @@
     </properties>
 
     <dependencies>
-        
         <!-- Spring Boot -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -61,19 +60,9 @@
             <scope>runtime</scope>
         </dependency>
         <dependency>
-            <groupId>org.jolokia</groupId>
-            <artifactId>jolokia-core</artifactId>
-        </dependency>
-        <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
             <scope>runtime</scope>
-        </dependency>
-
-        <!-- OpenCensus -->
-        <dependency>
-            <artifactId>spring-petclinic-opencensus-server</artifactId>
-            <groupId>org.springframework.samples.petclinic.opencensus</groupId>
         </dependency>
 
         <!-- Testing -->
