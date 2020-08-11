@@ -32,6 +32,7 @@ services:
     environment:
       - INSPECTIT_SERVICE_NAME=config-server
       - INSPECTIT_CONFIG_HTTP_URL=http://ocelot-config-server:8090/api/v1/agent/configuration
+      - INSPECTIT_EXPORTERS_METRICS_PROMETHEUS_ENABLED=true
       - INSPECTIT_EXPORTERS_METRICS_PROMETHEUS_PORT=9096
       - INSPECTIT_EXPORTERS_TRACING_JAEGER_URL=http://tracing-server:14268/api/traces
     depends_on:
@@ -58,6 +59,7 @@ services:
     environment:
       - INSPECTIT_SERVICE_NAME=discovery-server
       - INSPECTIT_CONFIG_HTTP_URL=http://ocelot-config-server:8090/api/v1/agent/configuration
+      - INSPECTIT_EXPORTERS_METRICS_PROMETHEUS_ENABLED=true
       - INSPECTIT_EXPORTERS_METRICS_PROMETHEUS_PORT=9095
       - INSPECTIT_EXPORTERS_TRACING_JAEGER_URL=http://tracing-server:14268/api/traces
     depends_on:
@@ -88,7 +90,8 @@ services:
     environment:
       - INSPECTIT_SERVICE_NAME=customers-service
       - INSPECTIT_CONFIG_HTTP_URL=http://ocelot-config-server:8090/api/v1/agent/configuration
-      - INSPECTIT_EXPORTERS_METRICS_PROMETHEUS_PORT=9090
+      - INSPECTIT_EXPORTERS_METRICS_PROMETHEUS_ENABLED=true
+      - INSPECTIT_EXPORTERS_METRICS_PROMETHEUS_PORT=9091
       - INSPECTIT_EXPORTERS_TRACING_JAEGER_URL=http://tracing-server:14268/api/traces
     depends_on:
       - config-server
@@ -117,6 +120,7 @@ services:
     environment:
       - INSPECTIT_SERVICE_NAME=visits-service
       - INSPECTIT_CONFIG_HTTP_URL=http://ocelot-config-server:8090/api/v1/agent/configuration
+      - INSPECTIT_EXPORTERS_METRICS_PROMETHEUS_ENABLED=true
       - INSPECTIT_EXPORTERS_METRICS_PROMETHEUS_PORT=9092
       - INSPECTIT_EXPORTERS_TRACING_JAEGER_URL=http://tracing-server:14268/api/traces
     depends_on:
@@ -146,6 +150,7 @@ services:
     environment:
       - INSPECTIT_SERVICE_NAME=vets-service
       - INSPECTIT_CONFIG_HTTP_URL=http://ocelot-config-server:8090/api/v1/agent/configuration
+      - INSPECTIT_EXPORTERS_METRICS_PROMETHEUS_ENABLED=true
       - INSPECTIT_EXPORTERS_METRICS_PROMETHEUS_PORT=9093
       - INSPECTIT_EXPORTERS_TRACING_JAEGER_URL=http://tracing-server:14268/api/traces
     depends_on:
@@ -175,6 +180,7 @@ services:
     environment:
       - INSPECTIT_SERVICE_NAME=api-gateway
       - INSPECTIT_CONFIG_HTTP_URL=http://ocelot-config-server:8090/api/v1/agent/configuration
+      - INSPECTIT_EXPORTERS_METRICS_PROMETHEUS_ENABLED=true
       - INSPECTIT_EXPORTERS_METRICS_PROMETHEUS_PORT=9094
       - INSPECTIT_EXPORTERS_TRACING_JAEGER_URL=http://tracing-server:14268/api/traces
     depends_on:
@@ -205,6 +211,7 @@ services:
     environment:
       - INSPECTIT_SERVICE_NAME=admin-server
       - INSPECTIT_CONFIG_HTTP_URL=http://ocelot-config-server:8090/api/v1/agent/configuration
+      - INSPECTIT_EXPORTERS_METRICS_PROMETHEUS_ENABLED=true
       - INSPECTIT_EXPORTERS_METRICS_PROMETHEUS_PORT=9097
       - INSPECTIT_EXPORTERS_TRACING_JAEGER_URL=http://tracing-server:14268/api/traces
     depends_on:
