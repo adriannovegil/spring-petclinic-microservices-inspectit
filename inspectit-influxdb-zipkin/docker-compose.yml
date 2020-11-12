@@ -243,14 +243,13 @@ services:
 
   # Grafana
   grafana-server:
-    build: ./grafana-server
-    image: inspectit/inspectit-grafana-server
-    container_name: inspectit-grafana-server
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=demo
-      - GF_PATHS_PROVISIONING=/usr/share/grafana/custom/
+    image: grafana/grafana:7.2.0
+    container_name: inspectit-grafana-server    
     volumes:
-      - ./grafana-server/provisioning:/usr/share/grafana/custom/
+      - ./grafana-server/etc:/etc/grafana:ro
+      - ./grafana-server/dashboards:/var/lib/grafana/dashboards
+      - grafana-lib:/var/lib/grafana
+      - grafana-log:/var/log/grafana
     depends_on:
       - influxdb-server
     ports:
@@ -281,4 +280,8 @@ services:
 volumes:
   agent-vol:
   influxdb-lib:
+    external: false
+  grafana-lib:
+    external: false
+  grafana-log:
     external: false
