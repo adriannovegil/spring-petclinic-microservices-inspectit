@@ -231,15 +231,14 @@ services:
   # ============================================================================
   # InfluxDB
   influxdb-server:
-    image: influxdb:1.7.1
+    image: influxdb:1.8.3-alpine
     container_name: inspectit-influxdb-server
-    environment:
-      - INFLUXDB_HTTP_FLUX_ENABLED=true
-      - INFLUXDB_HTTP_LOG_ENABLED=false
-      - INFLUXDB_DATA_QUERY_LOG_ENABLED=false
     volumes:
-      - ./influxdb-server:/docker-entrypoint-initdb.d
+      - ./influxdb-server/db:/docker-entrypoint-initdb.d
+      - ./influxdb-server/etc:/etc/influxdb
+      - influxdb-lib:/var/lib/influxdb
     ports:
+      - 8084:8083
       - 8086:8086
 
   # Grafana
@@ -281,3 +280,5 @@ services:
 
 volumes:
   agent-vol:
+  influxdb-lib:
+    external: false
