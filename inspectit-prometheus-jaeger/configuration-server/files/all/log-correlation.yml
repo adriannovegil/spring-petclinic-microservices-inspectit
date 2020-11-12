@@ -1,0 +1,5 @@
+inspectit:
+  tracing:
+    log-correlation:
+      trace-id-mdc-injection:
+        enabled: true
