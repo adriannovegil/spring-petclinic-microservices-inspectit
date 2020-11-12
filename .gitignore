@@ -16,3 +16,6 @@ target/
 
 # Branch switching
 generated/
+
+inspectit-influxdb-zipkin/configuration-server/users.db
+inspectit-prometheus-jaeger/configuration-server/users.db
