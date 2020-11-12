@@ -38,7 +38,6 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 
 import java.time.Duration;
 
-
 /**
  * @author Maciej Szarlinski
  */
@@ -67,24 +66,27 @@ public class ApiGatewayApplication {
 
     /**
      * workaround solution for forwarding to index.html
-     * @see <a href="https://github.com/spring-projects/spring-boot/issues/9785">#9785</a>
+     *
+     * @see
+     * <a href="https://github.com/spring-projects/spring-boot/issues/9785">#9785</a>
      */
     @Bean
     RouterFunction<?> routerFunction() {
         RouterFunction router = RouterFunctions.resources("/**", new ClassPathResource("static/"))
-            .andRoute(RequestPredicates.GET("/"),
-                request -> ServerResponse.ok().contentType(MediaType.TEXT_HTML).bodyValue(indexHtml));
+                .andRoute(RequestPredicates.GET("/"),
+                        request -> ServerResponse.ok().contentType(MediaType.TEXT_HTML).bodyValue(indexHtml));
         return router;
     }
 
     /**
      * Default Resilience4j circuit breaker configuration
+     * @return 
      */
     @Bean
     public Customizer<ReactiveResilience4JCircuitBreakerFactory> defaultCustomizer() {
         return factory -> factory.configureDefault(id -> new Resilience4JConfigBuilder(id)
-            .circuitBreakerConfig(CircuitBreakerConfig.ofDefaults())
-            .timeLimiterConfig(TimeLimiterConfig.custom().timeoutDuration(Duration.ofSeconds(4)).build())
-            .build());
+                .circuitBreakerConfig(CircuitBreakerConfig.ofDefaults())
+                .timeLimiterConfig(TimeLimiterConfig.custom().timeoutDuration(Duration.ofSeconds(4)).build())
+                .build());
     }
 }

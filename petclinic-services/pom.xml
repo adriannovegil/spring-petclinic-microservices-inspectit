@@ -15,7 +15,7 @@
     <name>${project.artifactId}</name>
     <packaging>pom</packaging>
 
-    <modules>
+    <modules>        
         <module>spring-petclinic-admin-server</module>
         <module>spring-petclinic-customers-service</module>
         <module>spring-petclinic-vets-service</module>
@@ -31,6 +31,8 @@
 
         <spring-boot.version>2.3.2.RELEASE</spring-boot.version>
         <spring-cloud.version>Hoxton.SR5</spring-cloud.version>
+
+        <opencensus.version>0.16.1</opencensus.version>
 
         <maven-surefire-plugin.version>2.22.0</maven-surefire-plugin.version>
 
@@ -61,6 +63,11 @@
                         <artifactId>junit</artifactId>
                     </exclusion>
                 </exclusions>
+            </dependency>            
+            <dependency>
+                <groupId>org.springframework.samples.petclinic.opencensus</groupId>                
+                <artifactId>spring-petclinic-opencensus</artifactId>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.assertj</groupId>

@@ -20,9 +20,7 @@ import org.springframework.samples.petclinic.api.dto.Visits;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
-
 import java.util.List;
-
 import static java.util.stream.Collectors.joining;
 
 /**
