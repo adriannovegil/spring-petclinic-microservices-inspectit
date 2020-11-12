@@ -23,6 +23,14 @@ services:
     ports:
       - 8090:8090
 
+  # Config server
+  ocelot-config-server-ui:
+    build: ./configuration-server-ui
+    image: inspectit/inspectit-ocelot-configurationserver-ui
+    container_name: ocelot-configurationserver-ui
+    ports:
+      - 3001:3000
+
   # Infrastructure
   # ============================================================================
   # Config server
@@ -248,7 +256,7 @@ services:
   # Grafana
   grafana-server:
     image: grafana/grafana:7.2.0
-    container_name: inspectit-grafana-server    
+    container_name: inspectit-grafana-server
     volumes:
       - ./grafana/etc:/etc/grafana:ro
       - ./grafana/dashboards:/var/lib/grafana/dashboards
